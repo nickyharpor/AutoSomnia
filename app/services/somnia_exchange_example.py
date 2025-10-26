@@ -1,6 +1,6 @@
 import time
 import asyncio
-from app.core.config import settings
+from app.core.backend_config import settings
 from web3 import AsyncWeb3
 from app.services.somnia_exchange_service import SomniaExchangeService
 
