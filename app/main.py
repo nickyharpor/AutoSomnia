@@ -52,7 +52,7 @@ async def lifespan(fast_api: FastAPI):
     logger.info("Shutting down FastAPI application...")
     
     try:
-        if hasattr(fast_api, 'db_manager') and fast_api.db_manager:
+        if hasattr(fast_api, 'db_manager') and fast_api.db_manager is not None:
             fast_api.db_manager.disconnect()
         logger.info("Application shutdown completed successfully")
     except Exception as e:
@@ -111,7 +111,7 @@ async def health_check(request: Request):
         }
         
         # Check database health if available
-        if hasattr(request.app.state, 'db_manager') and request.app.state.db_manager:
+        if hasattr(request.app.state, 'db_manager') and request.app.state.db_manager is not None:
             try:
                 db_health = request.app.state.db_manager.health_check()
                 health_status["database"] = db_health
@@ -164,7 +164,7 @@ def get_database(request: Request):
     Dependency to get database connection from app state.
     This can be overridden in tests.
     """
-    if not hasattr(request.app.state, 'db_manager') or not request.app.state.db_manager:
+    if not hasattr(request.app.state, 'db_manager') or request.app.state.db_manager is None:
         raise HTTPException(
             status_code=503,
             detail="Database connection not available"

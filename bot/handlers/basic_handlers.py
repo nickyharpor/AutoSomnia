@@ -1,5 +1,5 @@
 from telethon import events
-from bot.utils.logger import setup_logger
+from utils.logger import setup_logger
 
 logger = setup_logger()
 

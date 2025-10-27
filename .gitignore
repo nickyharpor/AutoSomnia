@@ -3,3 +3,5 @@
 .idea
 .env
 private
+*.session
+**/__pycache__

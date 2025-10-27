@@ -1,11 +1,15 @@
 import logging
 import sys
-from bot.config.bot_config import Config
+import os
 
-def setup_logger() -> logging.Logger:
+def setup_logger(log_level: str = None) -> logging.Logger:
     """Setup and configure logger"""
+    # Get log level from parameter, environment variable, or default to INFO
+    if log_level is None:
+        log_level = os.getenv('LOG_LEVEL', 'INFO')
+    
     logger = logging.getLogger('autosomnia_bot')
-    logger.setLevel(getattr(logging, Config.LOG_LEVEL))
+    logger.setLevel(getattr(logging, log_level.upper()))
     
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stdout)

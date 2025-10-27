@@ -93,7 +93,7 @@ class MongoDBManager:
 
     def disconnect(self) -> None:
         """Close MongoDB connection."""
-        if self._client:
+        if self._client is not None:
             self._client.close()
             self._client = None
             self._database = None
@@ -102,14 +102,14 @@ class MongoDBManager:
     @property
     def client(self) -> MongoClient:
         """Get MongoDB client, connecting if necessary."""
-        if not self._client:
+        if self._client is None:
             self.connect()
         return self._client
 
     @property
     def database(self) -> Database:
         """Get MongoDB database, connecting if necessary."""
-        if not self._database:
+        if self._database is None:
             self.connect()
         return self._database
 
@@ -246,7 +246,7 @@ class MongoDBManager:
         collection_name: str,
         filter_dict: Dict[str, Any] = None,
         projection: Optional[Dict[str, Any]] = None,
-        sort: Optional[tuple] = None,
+        sort: Optional[Union[tuple, List[tuple]]] = None,
         limit: Optional[int] = None,
         skip: Optional[int] = None
     ) -> List[Dict[str, Any]]:
@@ -257,7 +257,7 @@ class MongoDBManager:
             collection_name: Name of the collection
             filter_dict: Query filter (empty dict for all documents)
             projection: Fields to include/exclude
-            sort: Sort specification [(field, direction), ...]
+            sort: Sort specification - can be a single tuple (field, direction) or list of tuples [(field, direction), ...]
             limit: Maximum number of documents to return
             skip: Number of documents to skip
             
@@ -272,7 +272,17 @@ class MongoDBManager:
             cursor = collection.find(filter_dict, projection)
             
             if sort:
-                cursor = cursor.sort(sort)
+                # Handle both single tuple and list of tuples
+                if isinstance(sort, tuple) and len(sort) == 2 and isinstance(sort[0], str):
+                    # Single tuple like ("created_at", -1)
+                    cursor = cursor.sort([sort])
+                elif isinstance(sort, list):
+                    # List of tuples like [("created_at", -1), ("name", 1)]
+                    cursor = cursor.sort(sort)
+                else:
+                    # Fallback - try to use as-is
+                    cursor = cursor.sort(sort)
+                    
             if skip:
                 cursor = cursor.skip(skip)
             if limit:

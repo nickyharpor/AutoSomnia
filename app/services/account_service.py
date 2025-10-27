@@ -2,9 +2,14 @@ import logging
 from typing import Dict, List, Optional
 from decimal import Decimal
 
+from eth_typing import HexStr
 from web3 import Web3, AsyncWeb3
 from eth_account import Account
 from mnemonic import Mnemonic
+from web3.types import Wei
+
+# Enable mnemonic features for eth_account
+Account.enable_unaudited_hdwallet_features()
 
 from app.models.account_models import (
     EVMAccount,
@@ -111,7 +116,6 @@ class AccountService:
                 # Generate new account with mnemonic
                 mnemo = Mnemonic("english")
                 mnemonic_phrase = mnemo.generate(strength=128)
-                seed = mnemo.to_seed(mnemonic_phrase)
                 account = Account.from_mnemonic(mnemonic_phrase)
                 logger.info(f"Generated new account: {account.address}")
 
@@ -379,6 +383,282 @@ class AccountService:
             return nonce
         except Exception as e:
             logger.error(f"Error getting transaction count: {e}")
+            raise
+
+    # ==================== Transaction Methods ====================
+
+    async def send_eth(
+        self,
+        private_key: str,
+        to_address: str,
+        amount_eth: Decimal,
+        gas_limit: int = 21000,
+        gas_price: Optional[int] = None
+    ) -> str:
+        """
+        Send ETH to another address.
+        
+        Args:
+            private_key: Private key of sender account
+            to_address: Recipient address
+            amount_eth: Amount to send in ETH
+            gas_limit: Gas limit for transaction
+            gas_price: Gas price in wei (auto-fetch if None)
+            
+        Returns:
+            Transaction hash
+        """
+        try:
+            # Validate inputs
+            if not private_key.startswith('0x'):
+                private_key = '0x' + private_key
+            
+            account = Account.from_key(private_key)
+            from_address = account.address
+            to_address = _validate_address(to_address)
+            
+            # Convert ETH to wei
+            amount_wei = _eth_to_wei(amount_eth)
+            
+            # Get current balance to check if sufficient
+            balance_wei = await self.w3.eth.get_balance(from_address)
+            if balance_wei < amount_wei:
+                raise ValueError(f"Insufficient balance. Available: {_wei_to_eth(balance_wei)} ETH, Required: {amount_eth} ETH")
+            
+            # Get gas price if not provided
+            if gas_price is None:
+                gas_price = await self.w3.eth.gas_price
+            
+            # Check if balance covers amount + gas fees
+            total_cost = amount_wei + (gas_limit * gas_price)
+            if balance_wei < total_cost:
+                raise ValueError(f"Insufficient balance for transaction + gas fees. Available: {_wei_to_eth(balance_wei)} ETH, Required: {_wei_to_eth(total_cost)} ETH")
+            
+            # Get nonce
+            nonce = await self.w3.eth.get_transaction_count(from_address)
+            
+            # Build transaction
+            transaction = {
+                'to': to_address,
+                'value': amount_wei,
+                'gas': gas_limit,
+                'gasPrice': gas_price,
+                'nonce': nonce,
+                'chainId': self.chain_id
+            }
+            
+            # Sign transaction
+            signed_txn = self.w3.eth.account.sign_transaction(transaction, private_key)
+            
+            # Send transaction
+            tx_hash = await self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            
+            logger.info(f"ETH transaction sent: {tx_hash.hex()} - {amount_eth} ETH from {from_address} to {to_address}")
+            return tx_hash.hex()
+            
+        except Exception as e:
+            logger.error(f"Error sending ETH: {e}")
+            raise
+
+    async def send_token(
+        self,
+        private_key: str,
+        to_address: str,
+        token_address: str,
+        amount: Decimal,
+        gas_limit: int = 60000,
+        gas_price: Optional[int] = None
+    ) -> str:
+        """
+        Send ERC-20 tokens to another address.
+        
+        Args:
+            private_key: Private key of sender account
+            to_address: Recipient address
+            token_address: Token contract address
+            amount: Amount to send (in token units, not wei)
+            gas_limit: Gas limit for transaction
+            gas_price: Gas price in wei (auto-fetch if None)
+            
+        Returns:
+            Transaction hash
+        """
+        try:
+            # Validate inputs
+            if not private_key.startswith('0x'):
+                private_key = '0x' + private_key
+            
+            account = Account.from_key(private_key)
+            from_address = account.address
+            to_address = _validate_address(to_address)
+            token_address = _validate_address(token_address)
+            token_address_checksum = Web3.to_checksum_address(token_address)
+            
+            # Create token contract instance
+            token_contract = self.w3.eth.contract(
+                address=token_address_checksum,
+                abi=self.erc20_abi
+            )
+            
+            # Get token details
+            decimals = await token_contract.functions.decimals().call()
+            symbol = await token_contract.functions.symbol().call()
+            
+            # Convert amount to token's smallest unit
+            amount_wei = int(amount * Decimal(10**decimals))
+            
+            # Check token balance
+            balance_raw = await token_contract.functions.balanceOf(from_address).call()
+            if balance_raw < amount_wei:
+                balance_readable = Decimal(balance_raw) / Decimal(10**decimals)
+                raise ValueError(f"Insufficient token balance. Available: {balance_readable} {symbol}, Required: {amount} {symbol}")
+            
+            # Get gas price if not provided
+            if gas_price is None:
+                gas_price = await self.w3.eth.gas_price
+            
+            # Check ETH balance for gas fees
+            eth_balance = await self.w3.eth.get_balance(from_address)
+            gas_cost = gas_limit * gas_price
+            if eth_balance < gas_cost:
+                raise ValueError(f"Insufficient ETH for gas fees. Available: {_wei_to_eth(eth_balance)} ETH, Required: {_wei_to_eth(gas_cost)} ETH")
+            
+            # Get nonce
+            nonce = await self.w3.eth.get_transaction_count(from_address)
+            
+            # Build transfer transaction
+            transfer_function = token_contract.functions.transfer(to_address, amount_wei)
+            transaction = transfer_function.build_transaction({
+                'from': from_address,
+                'gas': gas_limit,
+                'gasPrice': gas_price,
+                'nonce': nonce,
+                'chainId': self.chain_id
+            })
+            
+            # Sign transaction
+            signed_txn = self.w3.eth.account.sign_transaction(transaction, private_key)
+            
+            # Send transaction
+            tx_hash = await self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            
+            logger.info(f"Token transaction sent: {tx_hash.hex()} - {amount} {symbol} from {from_address} to {to_address}")
+            return tx_hash.hex()
+            
+        except Exception as e:
+            logger.error(f"Error sending tokens: {e}")
+            raise
+
+    async def wait_for_transaction_receipt(self, tx_hash: str, timeout: int = 120) -> dict:
+        """
+        Wait for transaction receipt.
+        
+        Args:
+            tx_hash: Transaction hash
+            timeout: Timeout in seconds
+            
+        Returns:
+            Transaction receipt
+        """
+        try:
+            receipt = await self.w3.eth.wait_for_transaction_receipt(HexStr(tx_hash), timeout=timeout)
+            
+            # Convert receipt to dict for JSON serialization
+            receipt_dict = {
+                'transactionHash': receipt['transactionHash'].hex(),
+                'blockNumber': receipt['blockNumber'],
+                'blockHash': receipt['blockHash'].hex(),
+                'transactionIndex': receipt['transactionIndex'],
+                'from': receipt['from'],
+                'to': receipt['to'],
+                'gasUsed': receipt['gasUsed'],
+                'cumulativeGasUsed': receipt['cumulativeGasUsed'],
+                'status': receipt['status'],
+                'logs': [dict(log) for log in receipt['logs']]
+            }
+            
+            logger.info(f"Transaction receipt received: {tx_hash} - Status: {receipt['status']}")
+            return receipt_dict
+            
+        except Exception as e:
+            logger.error(f"Error waiting for transaction receipt: {e}")
+            raise
+
+    async def estimate_gas_for_eth_transfer(self, from_address: str, to_address: str, amount_eth: Decimal) -> int:
+        """
+        Estimate gas for ETH transfer.
+        
+        Args:
+            from_address: Sender address
+            to_address: Recipient address
+            amount_eth: Amount in ETH
+            
+        Returns:
+            Estimated gas limit
+        """
+        try:
+            from_address = _validate_address(from_address)
+            to_address = _validate_address(to_address)
+            amount_wei = _eth_to_wei(amount_eth)
+            
+            gas_estimate = await self.w3.eth.estimate_gas({
+                'from': from_address,
+                'to': to_address,
+                'value': Wei(amount_wei)
+            })
+            
+            logger.info(f"Gas estimate for ETH transfer: {gas_estimate}")
+            return gas_estimate
+            
+        except Exception as e:
+            logger.error(f"Error estimating gas for ETH transfer: {e}")
+            raise
+
+    async def estimate_gas_for_token_transfer(
+        self, 
+        from_address: str, 
+        to_address: str, 
+        token_address: str, 
+        amount: Decimal
+    ) -> int:
+        """
+        Estimate gas for token transfer.
+        
+        Args:
+            from_address: Sender address
+            to_address: Recipient address
+            token_address: Token contract address
+            amount: Amount in token units
+            
+        Returns:
+            Estimated gas limit
+        """
+        try:
+            from_address = _validate_address(from_address)
+            to_address = _validate_address(to_address)
+            token_address = _validate_address(token_address)
+            token_address_checksum = Web3.to_checksum_address(token_address)
+            
+            # Create token contract instance
+            token_contract = self.w3.eth.contract(
+                address=token_address_checksum,
+                abi=self.erc20_abi
+            )
+            
+            # Get token decimals
+            decimals = await token_contract.functions.decimals().call()
+            amount_wei = int(amount * Decimal(10**decimals))
+            
+            # Estimate gas for transfer
+            gas_estimate = await token_contract.functions.transfer(
+                to_address, amount_wei
+            ).estimate_gas({'from': from_address})
+            
+            logger.info(f"Gas estimate for token transfer: {gas_estimate}")
+            return gas_estimate
+            
+        except Exception as e:
+            logger.error(f"Error estimating gas for token transfer: {e}")
             raise
 
     # ==================== Utility Methods ====================

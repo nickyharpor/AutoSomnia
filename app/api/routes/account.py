@@ -4,12 +4,11 @@ from web3 import AsyncWeb3
 from decimal import Decimal
 
 from app.models.account_models import (
-    EVMAccount,
     TokenBalance,
     AccountPortfolio,
     AccountCreateRequest,
     AccountCreateResponse,
-    BalanceUpdateRequest
+    SendEthRequest, TransactionResponse, SendTokenRequest
 )
 from app.services.account_service import AccountService
 from app.core.backend_config import settings
@@ -218,6 +217,36 @@ async def list_accounts(
         raise HTTPException(status_code=500, detail=f"Error listing accounts: {str(e)}")
 
 
+@router.get("/list_user_accounts/{user_id}")
+async def list_user_accounts(
+        user_id: int,
+        limit: int = 50,
+        skip: int = 0,
+        db: MongoDBManager = Depends(get_db)
+):
+    """List all accounts stored in database."""
+    try:
+        accounts = db.find_many(
+            "accounts",
+            filter_dict={"user_id": user_id},
+            sort=("created_at", -1),
+            limit=limit,
+            skip=skip
+        )
+
+        total_count = db.count_documents("accounts")
+
+        return {
+            "accounts": accounts,
+            "total_count": total_count,
+            "limit": limit,
+            "skip": skip
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing accounts: {str(e)}")
+
+
 @router.get("/details/{address}")
 async def get_account_details(
     address: str,
@@ -341,3 +370,228 @@ async def health_check(
             "overall_status": "unhealthy",
             "error": str(e)
         }
+
+
+# ==================== Transaction Endpoints ====================
+
+@router.post("/send-eth", response_model=TransactionResponse)
+async def send_eth(
+    request: SendEthRequest,
+    service: AccountService = Depends(get_account_service)
+):
+    """Send ETH to another address with support for MAX amount."""
+    try:
+        # Get sender address from private key
+        sender_address = service.get_address_from_private_key(request.private_key)
+        
+        # Handle MAX amount
+        if isinstance(request.amount, str) and request.amount.upper() == "MAX":
+            # Get current balance
+            balance = await service.get_eth_balance(sender_address)
+            
+            # Get gas price
+            gas_price = request.gas_price
+            if gas_price is None:
+                gas_price = await service.w3.eth.gas_price
+            
+            # Calculate gas cost
+            gas_cost_wei = request.gas_limit * gas_price
+            gas_cost_eth = Decimal(gas_cost_wei) / Decimal(10**18)
+            
+            # Calculate max sendable amount (balance - gas fees)
+            max_amount = balance - gas_cost_eth
+            
+            if max_amount <= 0:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Insufficient balance for gas fees. Balance: {balance} ETH, Gas cost: {gas_cost_eth} ETH"
+                )
+            
+            amount_to_send = max_amount
+        else:
+            amount_to_send = Decimal(str(request.amount))
+        
+        # Send ETH
+        tx_hash = await service.send_eth(
+            private_key=request.private_key,
+            to_address=request.to_address,
+            amount_eth=amount_to_send,
+            gas_limit=request.gas_limit,
+            gas_price=request.gas_price
+        )
+        
+        # Get final gas price used
+        final_gas_price = request.gas_price
+        if final_gas_price is None:
+            final_gas_price = await service.w3.eth.gas_price
+        
+        # Calculate estimated gas cost
+        estimated_gas_cost = Decimal(request.gas_limit * final_gas_price) / Decimal(10**18)
+        
+        return TransactionResponse(
+            transaction_hash=tx_hash,
+            from_address=sender_address,
+            to_address=request.to_address,
+            amount=str(amount_to_send),
+            gas_limit=request.gas_limit,
+            gas_price=final_gas_price,
+            estimated_gas_cost=str(estimated_gas_cost)
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending ETH: {str(e)}")
+
+
+@router.post("/send-token", response_model=TransactionResponse)
+async def send_token(
+    request: SendTokenRequest,
+    service: AccountService = Depends(get_account_service)
+):
+    """Send ERC-20 tokens to another address with support for MAX amount."""
+    try:
+        # Get sender address from private key
+        sender_address = service.get_address_from_private_key(request.private_key)
+        
+        # Handle MAX amount
+        if isinstance(request.amount, str) and request.amount.upper() == "MAX":
+            # Get token balance
+            token_balance = await service.get_token_balance(sender_address, request.token_address)
+            amount_to_send = token_balance.balance
+            
+            if amount_to_send <= 0:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"No {token_balance.token_symbol} tokens to send"
+                )
+        else:
+            amount_to_send = Decimal(str(request.amount))
+        
+        # Send tokens
+        tx_hash = await service.send_token(
+            private_key=request.private_key,
+            to_address=request.to_address,
+            token_address=request.token_address,
+            amount=amount_to_send,
+            gas_limit=request.gas_limit,
+            gas_price=request.gas_price
+        )
+        
+        # Get final gas price used
+        final_gas_price = request.gas_price
+        if final_gas_price is None:
+            final_gas_price = await service.w3.eth.gas_price
+        
+        # Calculate estimated gas cost
+        estimated_gas_cost = Decimal(request.gas_limit * final_gas_price) / Decimal(10**18)
+        
+        return TransactionResponse(
+            transaction_hash=tx_hash,
+            from_address=sender_address,
+            to_address=request.to_address,
+            amount=str(amount_to_send),
+            gas_limit=request.gas_limit,
+            gas_price=final_gas_price,
+            estimated_gas_cost=str(estimated_gas_cost)
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending tokens: {str(e)}")
+
+
+@router.get("/transaction-receipt/{tx_hash}")
+async def get_transaction_receipt(
+    tx_hash: str,
+    timeout: int = 120,
+    service: AccountService = Depends(get_account_service)
+):
+    """Get transaction receipt and wait for confirmation."""
+    try:
+        receipt = await service.wait_for_transaction_receipt(tx_hash, timeout)
+        return receipt
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting transaction receipt: {str(e)}")
+
+
+@router.get("/estimate-gas/eth-transfer")
+async def estimate_gas_eth_transfer(
+    from_address: str,
+    to_address: str,
+    amount_eth: Decimal,
+    service: AccountService = Depends(get_account_service)
+):
+    """Estimate gas for ETH transfer."""
+    try:
+        gas_estimate = await service.estimate_gas_for_eth_transfer(from_address, to_address, amount_eth)
+        gas_price = await service.w3.eth.gas_price
+        estimated_cost = Decimal(gas_estimate * gas_price) / Decimal(10**18)
+        
+        return {
+            "gas_estimate": gas_estimate,
+            "gas_price": gas_price,
+            "estimated_cost_eth": str(estimated_cost),
+            "estimated_cost_wei": gas_estimate * gas_price
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error estimating gas: {str(e)}")
+
+
+@router.get("/estimate-gas/token-transfer")
+async def estimate_gas_token_transfer(
+    from_address: str,
+    to_address: str,
+    token_address: str,
+    amount: Decimal,
+    service: AccountService = Depends(get_account_service)
+):
+    """Estimate gas for token transfer."""
+    try:
+        gas_estimate = await service.estimate_gas_for_token_transfer(
+            from_address, to_address, token_address, amount
+        )
+        gas_price = await service.w3.eth.gas_price
+        estimated_cost = Decimal(gas_estimate * gas_price) / Decimal(10**18)
+        
+        return {
+            "gas_estimate": gas_estimate,
+            "gas_price": gas_price,
+            "estimated_cost_eth": str(estimated_cost),
+            "estimated_cost_wei": gas_estimate * gas_price
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error estimating gas: {str(e)}")
+
+
+@router.get("/max-sendable-eth/{address}")
+async def get_max_sendable_eth(
+    address: str,
+    gas_limit: int = 21000,
+    service: AccountService = Depends(get_account_service)
+):
+    """Calculate maximum sendable ETH amount (balance - gas fees)."""
+    try:
+        # Get current balance
+        balance = await service.get_eth_balance(address)
+        
+        # Get current gas price
+        gas_price = await service.w3.eth.gas_price
+        
+        # Calculate gas cost
+        gas_cost_wei = gas_limit * gas_price
+        gas_cost_eth = Decimal(gas_cost_wei) / Decimal(10**18)
+        
+        # Calculate max sendable amount
+        max_sendable = balance - gas_cost_eth
+        
+        if max_sendable < 0:
+            max_sendable = Decimal('0')
+        
+        return {
+            "address": address,
+            "current_balance": str(balance),
+            "gas_cost": str(gas_cost_eth),
+            "max_sendable": str(max_sendable),
+            "gas_limit": gas_limit,
+            "gas_price": gas_price
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating max sendable ETH: {str(e)}")

@@ -15,18 +15,14 @@ class Settings(BaseSettings):
     PRIVATE_KEY: str = "0x0000000000000000000000000000000000000000000000000000000000000001"
     ADDRESS: str = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
 
-    # Token Addresses
+    # Tokens
     WSTT: str = "0xF22eF0085f6511f70b01a68F360dCc56261F768a"
     SUSDT: str = "0x65296738D4E5edB1515e40287B6FDf8320E6eE04"
-    PING: str = "0x33E7fAB0a8a5da1A923180989bD617c9c2D1C493"
-    PONG: str = "0x9beaA0016c22B646Ac311Ab171270B0ECf23098F"
-    NIA: str = "0xF2F773753cEbEFaF9b68b841d80C083b18C69311"
+    WSTT_ID: str = 'somnia'
+    SUSDT_ID: str = 'tether'
 
-    # Bot Configuration (from bot config)
-    SESSION_NAME: str = 'autosomnia_session'
-    ADMIN_IDS: str = '0'
-    API_BASE_URL: str = 'http://localhost:8000'
-    LOG_LEVEL: str = 'INFO'
+    # Coingecko
+    COINGECKO_API_KEY: str = ''
 
     # AI
     GEMINI_API_KEY: str = ''
@@ -42,6 +38,7 @@ class Settings(BaseSettings):
 
     # Other configurations
     GAS_LIMIT: int = 300000
+    LOG_LEVEL: str = 'INFO'
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent.parent.parent / '.env',

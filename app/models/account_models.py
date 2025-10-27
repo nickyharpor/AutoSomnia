@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Union
 from pydantic import BaseModel, Field, field_validator
 from decimal import Decimal
 import re
@@ -176,3 +176,35 @@ class BalanceUpdateRequest(BaseModel):
         json_encoders = {
             Decimal: str
         }
+
+# ==================== Request Models ====================
+
+class SendEthRequest(BaseModel):
+    """Request model for sending ETH."""
+    private_key: str = Field(..., description="Private key of sender account")
+    to_address: str = Field(..., description="Recipient address")
+    amount: Union[str, Decimal] = Field(..., description="Amount to send in ETH or 'MAX'")
+    gas_limit: int = Field(default=21000, description="Gas limit for transaction")
+    gas_price: Optional[int] = Field(None, description="Gas price in wei (auto-fetch if None)")
+
+
+class SendTokenRequest(BaseModel):
+    """Request model for sending tokens."""
+    private_key: str = Field(..., description="Private key of sender account")
+    to_address: str = Field(..., description="Recipient address")
+    token_address: str = Field(..., description="Token contract address")
+    amount: Union[str, Decimal] = Field(..., description="Amount to send in token units or 'MAX'")
+    gas_limit: int = Field(default=60000, description="Gas limit for transaction")
+    gas_price: Optional[int] = Field(None, description="Gas price in wei (auto-fetch if None)")
+
+
+class TransactionResponse(BaseModel):
+    """Response model for transaction operations."""
+    transaction_hash: str = Field(..., description="Transaction hash")
+    from_address: str = Field(..., description="Sender address")
+    to_address: str = Field(..., description="Recipient address")
+    amount: str = Field(..., description="Amount sent")
+    gas_limit: int = Field(..., description="Gas limit used")
+    gas_price: int = Field(..., description="Gas price used")
+    estimated_gas_cost: str = Field(..., description="Estimated gas cost in ETH")
+

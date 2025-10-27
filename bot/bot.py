@@ -7,16 +7,18 @@ from telethon.errors import RPCError
 
 from config.bot_config import Config
 from utils.logger import setup_logger
-from handlers import basic_handlers
+from handlers import basic_handlers, account_handlers, exchange_handlers
 
-logger = setup_logger()
+# Initialize logger after config is available
+config = Config()
+logger = setup_logger(config.LOG_LEVEL)
 
 
 class TelegramBot:
     """Telegram bot wrapper managing client lifecycle, handlers, and shutdown."""
 
     def __init__(self) -> None:
-        self.config = Config()
+        self.config = config  # Use the already initialized config
         self._validate_config()
 
         self.client: TelegramClient = TelegramClient(
@@ -42,16 +44,29 @@ class TelegramBot:
 
     def _register_handlers(self) -> None:
         """Attach event handlers to the client."""
-        self.client.add_event_handler(basic.start_handler)
-        self.client.add_event_handler(basic.help_handler)
-        self.client.add_event_handler(basic.echo_handler)
-        logger.info("Handlers registered: start, help, echo")
+        # Basic handlers
+        self.client.add_event_handler(basic_handlers.start_handler)
+        self.client.add_event_handler(basic_handlers.help_handler)
+        self.client.add_event_handler(basic_handlers.echo_handler)
+        
+        # Account handlers
+        self.client.add_event_handler(account_handlers.new_account)
+        self.client.add_event_handler(account_handlers.withdraw_funds_handler)
+        self.client.add_event_handler(account_handlers.withdraw_funds_help)
+        self.client.add_event_handler(account_handlers.account_info)
+        
+        # Exchange handlers
+        self.client.add_event_handler(exchange_handlers.suggest_exchange)
+        self.client.add_event_handler(exchange_handlers.auto_exchange_on)
+        self.client.add_event_handler(exchange_handlers.auto_exchange_off)
+        
+        logger.info("Handlers registered: basic, account, and exchange handlers")
 
     async def start(self) -> None:
         """Start the bot with logging and keep it running until disconnected."""
         logger.info("Starting Telegram bot...")
         try:
-            self.client.start(bot_token=self.config.BOT_TOKEN)
+            await self.client.start(bot_token=self.config.BOT_TOKEN)
         except RPCError as e:
             logger.error(f"Telegram RPC error during start: {e}")
             raise
@@ -62,7 +77,7 @@ class TelegramBot:
         self._register_handlers()
         logger.info("Bot started successfully")
 
-        self.client.run_until_disconnected()
+        await self.client.run_until_disconnected()
 
     async def stop(self) -> None:
         """Signal-safe shutdown: disconnect client and mark stopping."""
@@ -71,7 +86,7 @@ class TelegramBot:
         self._stopping.set()
         try:
             if self.client.is_connected():
-                self.client.disconnect()
+                await self.client.disconnect()
         except Exception as e:
             logger.warning(f"Error while disconnecting client: {e}")
 
