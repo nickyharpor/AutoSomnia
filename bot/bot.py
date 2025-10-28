@@ -59,6 +59,10 @@ class TelegramBot:
         self.client.add_event_handler(exchange_handlers.suggest_exchange)
         self.client.add_event_handler(exchange_handlers.auto_exchange_on)
         self.client.add_event_handler(exchange_handlers.auto_exchange_off)
+        self.client.add_event_handler(exchange_handlers.buy_usd)
+        self.client.add_event_handler(exchange_handlers.buy_usd_help)
+        self.client.add_event_handler(exchange_handlers.sell_usd)
+        self.client.add_event_handler(exchange_handlers.sell_usd_help)
         
         logger.info("Handlers registered: basic, account, and exchange handlers")
 

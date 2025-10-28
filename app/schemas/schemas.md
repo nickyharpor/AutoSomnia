@@ -8,3 +8,12 @@
 "created_at": datetime,
 "updated_at": datetime
 }
+
+## users
+
+{
+"user_id": int,
+"auto_exchange": boolean,
+"created_at": datetime,
+"updated_at": datetime
+}

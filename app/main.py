@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.backend_config import settings
 from app.core.mongodb import MongoDBManager
-from app.api.routes import account, exchange
+from app.api.routes import account, exchange, users
 
 # Setup logging
 logging.basicConfig(
@@ -33,9 +33,16 @@ async def lifespan(fast_api: FastAPI):
         
         # Create indexes for better performance
         try:
-            #fast_api.state.db_manager.create_index("accounts", "address", unique=True)
-            #fast_api.state.db_manager.create_index("accounts", "chain_id")
-            #fast_api.state.db_manager.create_index("accounts", "created_at")
+            # Account indexes
+            fast_api.db_manager.create_index("accounts", "address", unique=True)
+            fast_api.db_manager.create_index("accounts", "chain_id")
+            fast_api.db_manager.create_index("accounts", "created_at")
+            
+            # User indexes
+            fast_api.db_manager.create_index("users", "user_id", unique=True)
+            fast_api.db_manager.create_index("users", "auto_exchange")
+            fast_api.db_manager.create_index("users", "created_at")
+            
             logger.info("Database indexes created successfully")
         except Exception as e:
             logger.warning(f"Index creation failed (may already exist): {e}")
@@ -111,9 +118,9 @@ async def health_check(request: Request):
         }
         
         # Check database health if available
-        if hasattr(request.app.state, 'db_manager') and request.app.state.db_manager is not None:
+        if hasattr(request.app, 'db_manager') and request.app.db_manager is not None:
             try:
-                db_health = request.app.state.db_manager.health_check()
+                db_health = request.app.db_manager.health_check()
                 health_status["database"] = db_health
             except Exception as e:
                 health_status["database"] = {
@@ -142,13 +149,14 @@ async def root():
     Root endpoint with API information.
     """
     return {
-        "message": "Web3 Account Management API",
+        "message": "AutoSomnia API",
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/health",
         "endpoints": {
             "accounts": "/account",
-            "exchange": "/exchange"
+            "exchange": "/exchange",
+            "users": "/users"
         }
     }
 
@@ -156,6 +164,7 @@ async def root():
 # Include routers
 app.include_router(account.router)
 app.include_router(exchange.router)
+app.include_router(users.router)
 
 
 # Dependency for database connection
@@ -164,12 +173,12 @@ def get_database(request: Request):
     Dependency to get database connection from app state.
     This can be overridden in tests.
     """
-    if not hasattr(request.app.state, 'db_manager') or request.app.state.db_manager is None:
+    if not hasattr(request.app, 'db_manager') or request.app.db_manager is None:
         raise HTTPException(
             status_code=503,
             detail="Database connection not available"
         )
-    return request.app.state.db_manager
+    return request.app.db_manager
 
 
 # Override the database dependency in account routes
