@@ -162,6 +162,15 @@ The FastAPI backend provides comprehensive REST endpoints:
 - `GET /account/portfolio/{address}` - Get complete portfolio
 - `POST /account/send-eth` - Send ETH transactions
 - `POST /account/send-token` - Send ERC-20 tokens
+- `DELETE /account/remove/{address}` - Remove single account
+- `DELETE /account/remove-user/{user_id}` - Remove user and all their accounts
+
+**Exchange Operations:**
+- `GET /exchange/weth-address` - Get WETH token address
+- `GET /exchange/factory-address` - Get factory contract address
+- `POST /exchange/quote` - Get quote for token pairs
+- `POST /exchange/amounts-out` - Calculate swap outputs
+- `POST /exchange/swap-exact-tokens-for-tokens` - Execute token swaps
 
 **Exchange Operations:**
 - `GET /exchange/amounts-out` - Calculate swap outputs

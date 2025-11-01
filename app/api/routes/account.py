@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List, Optional
 from web3 import AsyncWeb3
 from decimal import Decimal
@@ -10,7 +10,12 @@ from app.models.account_models import (
     AccountCreateResponse,
     SendEthRequest, TransactionResponse, SendTokenRequest
 )
-from app.services.account_service import AccountService
+from app.services.account_service import (
+    AccountService,
+    delete_user_with_accounts,
+    validate_private_key as vpk,
+    get_address_from_private_key
+)
 from app.core.backend_config import settings
 from app.core.mongodb import MongoDBManager
 
@@ -27,18 +32,14 @@ async def get_account_service() -> AccountService:
         raise HTTPException(status_code=500, detail=f"Failed to initialize account service: {str(e)}")
 
 
-def get_db() -> MongoDBManager:
-    """Get MongoDB connection."""
-    try:
-        # You'll need to add MongoDB connection string to your settings
-        # For now using a default local connection
-        connection_string = getattr(settings, 'MONGODB_URL', 'mongodb://localhost:27017')
-        database_name = getattr(settings, 'DATABASE_NAME', 'web3_accounts')
-        
-        db_manager = MongoDBManager(connection_string, database_name)
-        return db_manager
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to connect to database: {str(e)}")
+def get_db(request: Request) -> MongoDBManager:
+    """Get MongoDB connection from app state."""
+    if not hasattr(request.app, 'db_manager') or request.app.db_manager is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection not available"
+        )
+    return request.app.db_manager
 
 
 # ==================== Account Creation/Import ====================
@@ -234,7 +235,7 @@ async def list_user_accounts(
             skip=skip
         )
 
-        total_count = db.count_documents("accounts")
+        total_count = db.count_documents("accounts", {"user_id": user_id})
 
         return {
             "accounts": accounts,
@@ -290,6 +291,38 @@ async def remove_account(
         raise HTTPException(status_code=500, detail=f"Error removing account: {str(e)}")
 
 
+@router.delete("/remove-user/{user_id}")
+async def remove_user_with_accounts(
+    user_id: int,
+    service: AccountService = Depends(get_account_service),
+    db: MongoDBManager = Depends(get_db)
+):
+    """Remove user and all their associated accounts from database."""
+    try:
+        # Check if user exists
+        user = db.find_one("users", {"user_id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Delete user and all their accounts
+        result = delete_user_with_accounts(db, user_id)
+        
+        if not result["user_deleted"]:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "message": f"User {user_id} and all associated accounts removed successfully",
+            "user_id": user_id,
+            "accounts_deleted": result["accounts_deleted"],
+            "accounts_found": result["accounts_found"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error removing user with accounts: {str(e)}")
+
+
 # ==================== Utility Endpoints ====================
 
 @router.post("/validate-private-key")
@@ -299,10 +332,10 @@ async def validate_private_key(
 ):
     """Validate private key format."""
     try:
-        is_valid = service.validate_private_key(private_key)
+        is_valid = vpk(private_key)
 
         if is_valid:
-            address_from_pk = service.get_address_from_private_key(private_key)
+            address_from_pk = get_address_from_private_key(private_key)
             result = {"is_valid": is_valid,
                       "address": address_from_pk}
         else:
@@ -382,7 +415,7 @@ async def send_eth(
     """Send ETH to another address with support for MAX amount."""
     try:
         # Get sender address from private key
-        sender_address = service.get_address_from_private_key(request.private_key)
+        sender_address = get_address_from_private_key(request.private_key)
         
         # Handle MAX amount
         if isinstance(request.amount, str) and request.amount.upper() == "MAX":
@@ -450,7 +483,7 @@ async def send_token(
     """Send ERC-20 tokens to another address with support for MAX amount."""
     try:
         # Get sender address from private key
-        sender_address = service.get_address_from_private_key(request.private_key)
+        sender_address = get_address_from_private_key(request.private_key)
         
         # Handle MAX amount
         if isinstance(request.amount, str) and request.amount.upper() == "MAX":

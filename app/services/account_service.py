@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from decimal import Decimal
 
 from eth_typing import HexStr
@@ -39,6 +39,82 @@ def _wei_to_eth(wei_amount: int) -> Decimal:
 def _eth_to_wei(eth_amount: Decimal) -> int:
     """Convert ETH to wei."""
     return int(eth_amount * Decimal(10**18))
+
+
+def delete_user_with_accounts(db_manager, user_id: int) -> Dict[str, Any]:
+    """
+    Delete a user and all their associated accounts.
+
+    Args:
+        db_manager: MongoDB manager instance
+        user_id: User ID to delete
+
+    Returns:
+        Dictionary with deletion results
+    """
+    try:
+        # First, get all accounts for this user
+        user_accounts = db_manager.find_many("accounts", {"user_id": user_id})
+        account_count = len(user_accounts)
+
+        # Delete all accounts for this user
+        accounts_deleted = db_manager.delete_many("accounts", {"user_id": user_id})
+
+        # Delete the user
+        user_deleted = db_manager.delete_one("users", {"user_id": user_id})
+
+        result = {
+            "user_deleted": user_deleted > 0,
+            "accounts_found": account_count,
+            "accounts_deleted": accounts_deleted,
+            "user_id": user_id
+        }
+
+        logger.info(f"Deleted user {user_id} with {accounts_deleted} accounts")
+        return result
+
+    except Exception as e:
+        logger.error(f"Error deleting user with accounts: {e}")
+        raise
+
+
+def get_address_from_private_key(private_key: str) -> str:
+    """
+    Get Ethereum address from private key.
+
+    Args:
+        private_key: Private key
+
+    Returns:
+        Ethereum address
+    """
+    try:
+        if not private_key.startswith('0x'):
+            private_key = '0x' + private_key
+        account = Account.from_key(private_key)
+        return account.address
+    except Exception as e:
+        logger.error(f"Error deriving address from private key: {e}")
+        raise
+
+
+def validate_private_key(private_key: str) -> bool:
+    """
+    Validate private key format and derive address.
+
+    Args:
+        private_key: Private key to validate
+
+    Returns:
+        True if valid
+    """
+    try:
+        if not private_key.startswith('0x'):
+            private_key = '0x' + private_key
+        Account.from_key(private_key)
+        return True
+    except Exception:
+        return False
 
 
 class AccountService:
@@ -663,43 +739,6 @@ class AccountService:
 
     # ==================== Utility Methods ====================
 
-    def validate_private_key(self, private_key: str) -> bool:
-        """
-        Validate private key format and derive address.
-        
-        Args:
-            private_key: Private key to validate
-            
-        Returns:
-            True if valid
-        """
-        try:
-            if not private_key.startswith('0x'):
-                private_key = '0x' + private_key
-            Account.from_key(private_key)
-            return True
-        except Exception:
-            return False
-
-    def get_address_from_private_key(self, private_key: str) -> str:
-        """
-        Get Ethereum address from private key.
-        
-        Args:
-            private_key: Private key
-            
-        Returns:
-            Ethereum address
-        """
-        try:
-            if not private_key.startswith('0x'):
-                private_key = '0x' + private_key
-            account = Account.from_key(private_key)
-            return account.address
-        except Exception as e:
-            logger.error(f"Error deriving address from private key: {e}")
-            raise
-
     async def is_contract_address(self, address: str) -> bool:
         """
         Check if an address is a contract.
@@ -718,3 +757,4 @@ class AccountService:
         except Exception as e:
             logger.error(f"Error checking if address is contract: {e}")
             return False
+
