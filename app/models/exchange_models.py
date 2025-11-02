@@ -52,3 +52,22 @@ class SwapResponse(BaseModel):
     transaction_hash: str = Field(..., description="Transaction hash")
     status: int = Field(..., description="Transaction status (1=success)")
     gas_used: int = Field(..., description="Gas used in transaction")
+
+
+class ApprovalRequest(BaseModel):
+    """Request model for token approval operations."""
+    token_address: str = Field(..., description="ERC-20 token contract address")
+    spender_address: str = Field(..., description="Address to approve for spending tokens")
+    amount: int = Field(..., description="Amount to approve in wei/smallest unit")
+    from_address: str = Field(..., description="Token owner address")
+    private_key: str = Field(..., description="Private key for signing")
+
+
+class ApprovalResponse(BaseModel):
+    """Response model for approval operations."""
+    transaction_hash: str = Field(..., description="Transaction hash")
+    status: int = Field(..., description="Transaction status (1=success)")
+    gas_used: int = Field(..., description="Gas used in transaction")
+    token_address: str = Field(..., description="Token contract address")
+    spender_address: str = Field(..., description="Approved spender address")
+    amount: int = Field(..., description="Approved amount")

@@ -31,6 +31,21 @@ async def lifespan(fast_api: FastAPI):
         fast_api.db_manager = MongoDBManager(settings.MONGODB_URL, settings.DATABASE_NAME)
         fast_api.db_manager.connect()
         
+        # Initialize AsyncWeb3 instance for exchange operations
+        from web3 import AsyncWeb3
+        fast_api.web3_instance = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.RPC_URL))
+        
+        # Test Web3 connection
+        try:
+            is_connected = await fast_api.web3_instance.is_connected()
+            if is_connected:
+                latest_block = await fast_api.web3_instance.eth.get_block('latest')
+                logger.info(f"Web3 connected successfully, latest block: {latest_block['number']}")
+            else:
+                logger.warning("Web3 connection test failed")
+        except Exception as e:
+            logger.warning(f"Web3 connection test error: {e}")
+        
         # Create indexes for better performance
         try:
             # Account indexes
@@ -59,8 +74,22 @@ async def lifespan(fast_api: FastAPI):
     logger.info("Shutting down FastAPI application...")
     
     try:
+        # Close Web3 provider session
+        if hasattr(fast_api, 'web3_instance') and fast_api.web3_instance is not None:
+            try:
+                # Close the aiohttp session if it exists
+                if hasattr(fast_api.web3_instance.provider, '_session') and fast_api.web3_instance.provider._session:
+                    await fast_api.web3_instance.provider._session.close()
+                elif hasattr(fast_api.web3_instance.provider, 'session') and fast_api.web3_instance.provider.session:
+                    await fast_api.web3_instance.provider.session.close()
+                logger.info("Web3 provider session closed successfully")
+            except Exception as e:
+                logger.warning(f"Error closing Web3 provider session: {e}")
+        
+        # Close database connection
         if hasattr(fast_api, 'db_manager') and fast_api.db_manager is not None:
             fast_api.db_manager.disconnect()
+        
         logger.info("Application shutdown completed successfully")
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")

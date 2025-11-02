@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = 'development'
 
     # Other configurations
-    GAS_LIMIT: int = 300000
+    GAS_LIMIT: int = 30000000
     LOG_LEVEL: str = 'INFO'
 
     model_config = SettingsConfigDict(

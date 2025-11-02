@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Union
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict, field_serializer
 from decimal import Decimal
 import re
 
@@ -48,10 +48,12 @@ class EVMAccount(BaseModel):
             raise ValueError('Nonce cannot be negative')
         return v
 
-    class Config:
-        json_encoders = {
-            Decimal: str
-        }
+    @field_serializer('balance')
+    def serialize_balance(self, value: Decimal) -> str:
+        """Serialize Decimal balance to string."""
+        return str(value)
+
+    model_config = ConfigDict()
 
 
 class TokenBalance(BaseModel):
@@ -87,10 +89,12 @@ class TokenBalance(BaseModel):
             raise ValueError('Token decimals must be between 0 and 77')
         return v
 
-    class Config:
-        json_encoders = {
-            Decimal: str
-        }
+    @field_serializer('balance')
+    def serialize_balance(self, value: Decimal) -> str:
+        """Serialize Decimal balance to string."""
+        return str(value)
+
+    model_config = ConfigDict()
 
 
 class AccountPortfolio(BaseModel):
@@ -110,10 +114,12 @@ class AccountPortfolio(BaseModel):
         description="Last update timestamp (unix)"
     )
     
-    class Config:
-        json_encoders = {
-            Decimal: str
-        }
+    @field_serializer('total_value_usd')
+    def serialize_total_value_usd(self, value: Optional[Decimal]) -> Optional[str]:
+        """Serialize Decimal total_value_usd to string."""
+        return str(value) if value is not None else None
+    
+    model_config = ConfigDict()
 
 
 class AccountCreateRequest(BaseModel):
@@ -172,10 +178,12 @@ class BalanceUpdateRequest(BaseModel):
             raise ValueError('Balance cannot be negative')
         return v
 
-    class Config:
-        json_encoders = {
-            Decimal: str
-        }
+    @field_serializer('new_balance')
+    def serialize_new_balance(self, value: Decimal) -> str:
+        """Serialize Decimal new_balance to string."""
+        return str(value)
+
+    model_config = ConfigDict()
 
 # ==================== Request Models ====================
 

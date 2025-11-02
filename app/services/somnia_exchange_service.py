@@ -6,6 +6,7 @@ from pathlib import Path
 from web3 import Web3, AsyncWeb3
 from web3.contract import AsyncContract
 from web3.types import ChecksumAddress, TxReceipt
+from app.core.backend_config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,108 @@ class SomniaExchangeService:
             logger.error(f"Error getting quote: {e}")
             raise
 
+    # ==================== Token Approval Functions ====================
+
+    async def approve_token(
+        self,
+        token_address: str,
+        spender_address: str,
+        amount: int,
+        from_address: str,
+        private_key: str
+    ) -> TxReceipt:
+        """
+        Approve a spender (like router) to spend tokens on behalf of the owner.
+        
+        Args:
+            token_address: Address of the ERC-20 token contract
+            spender_address: Address that will be approved to spend tokens (usually router)
+            amount: Amount of tokens to approve (in wei/smallest unit)
+            from_address: Address of the token owner
+            private_key: Private key of the token owner
+            
+        Returns:
+            Transaction receipt
+        """
+        try:
+            token_address = self._validate_address(token_address)
+            spender_address = self._validate_address(spender_address)
+            from_address = self._validate_address(from_address)
+            from_address_checksum = Web3.to_checksum_address(from_address)
+
+            # Standard ERC-20 ABI for approve function
+            erc20_abi = [
+                {
+                    "constant": False,
+                    "inputs": [
+                        {"name": "spender", "type": "address"},
+                        {"name": "value", "type": "uint256"}
+                    ],
+                    "name": "approve",
+                    "outputs": [{"name": "", "type": "bool"}],
+                    "type": "function"
+                }
+            ]
+
+            token_address_checksum = Web3.to_checksum_address(token_address)
+
+            # Create token contract instance
+            token_contract = self.w3.eth.contract(
+                address=token_address_checksum,
+                abi=erc20_abi
+            )
+
+            # Build approval transaction
+            tx = await token_contract.functions.approve(
+                spender_address, amount
+            ).build_transaction({
+                "from": from_address,
+                "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
+                "gas": settings.GAS_LIMIT,
+                "gasPrice": await self.w3.eth.gas_price,
+            })
+
+            # Sign and send transaction
+            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
+            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            receipt = await self.w3.eth.wait_for_transaction_receipt(tx_hash)
+            
+            logger.info(f"Token approval transaction: {tx_hash.hex()}")
+            logger.info(f"Approved {amount} tokens at {token_address} for spender {spender_address}")
+            
+            return receipt
+            
+        except Exception as e:
+            logger.error(f"Error approving token: {e}")
+            raise
+
+    async def approve_router_for_token(
+        self,
+        token_address: str,
+        amount: int,
+        from_address: str,
+        private_key: str
+    ) -> TxReceipt:
+        """
+        Convenience method to approve the router contract to spend tokens.
+        
+        Args:
+            token_address: Address of the ERC-20 token contract
+            amount: Amount of tokens to approve (in wei/smallest unit)
+            from_address: Address of the token owner
+            private_key: Private key of the token owner
+            
+        Returns:
+            Transaction receipt
+        """
+        return await self.approve_token(
+            token_address=token_address,
+            spender_address=self.contract_address,  # Router contract address
+            amount=amount,
+            from_address=from_address,
+            private_key=private_key
+        )
+
     # ==================== Liquidity Functions ====================
 
     async def add_liquidity(
@@ -153,12 +256,12 @@ class SomniaExchangeService:
             ).build_transaction({
                 "from": from_address,
                 "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
-                "gas": 300000,
+                "gas": settings.GAS_LIMIT,
                 "gasPrice": await self.w3.eth.gas_price,
             })
 
             signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             receipt = await self.w3.eth.wait_for_transaction_receipt(tx_hash)
             logger.info(f"Add liquidity transaction: {tx_hash.hex()}")
             return receipt
@@ -188,7 +291,7 @@ class SomniaExchangeService:
             ).build_transaction({
                 "from": from_address,
                 "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
-                "gas": 300000,
+                "gas": settings.GAS_LIMIT,
                 "gasPrice": await self.w3.eth.gas_price,
             })
 
@@ -224,12 +327,12 @@ class SomniaExchangeService:
                 "from": from_address,
                 "value": eth_value,
                 "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
-                "gas": 300000,
+                "gas": settings.GAS_LIMIT,
                 "gasPrice": await self.w3.eth.gas_price,
             })
 
             signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             receipt = await self.w3.eth.wait_for_transaction_receipt(tx_hash)
             logger.info(f"Swap exact ETH for tokens transaction: {tx_hash.hex()}")
             return receipt
@@ -259,12 +362,12 @@ class SomniaExchangeService:
             ).build_transaction({
                 "from": from_address,
                 "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
-                "gas": 300000,
+                "gas": settings.GAS_LIMIT,
                 "gasPrice": await self.w3.eth.gas_price,
             })
 
             signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             receipt = await self.w3.eth.wait_for_transaction_receipt(tx_hash)
             logger.info(f"Swap exact tokens for ETH transaction: {tx_hash.hex()}")
             return receipt
@@ -297,12 +400,12 @@ class SomniaExchangeService:
             ).build_transaction({
                 "from": from_address,
                 "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
-                "gas": 300000,
+                "gas": settings.GAS_LIMIT,
                 "gasPrice": await self.w3.eth.gas_price,
             })
 
             signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             receipt = await self.w3.eth.wait_for_transaction_receipt(tx_hash)
             logger.info(f"Remove liquidity transaction: {tx_hash.hex()}")
             return receipt

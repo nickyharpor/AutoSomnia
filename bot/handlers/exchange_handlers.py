@@ -14,7 +14,7 @@ from app.utils.gemini import GeminiClient
 
 # sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.logger import setup_logger # ignore
+from utils.logger import setup_logger
 from config.bot_config import Config
 
 
