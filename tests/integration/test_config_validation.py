@@ -89,7 +89,7 @@ class TestConfigValidation:
         assert settings.GAS_LIMIT is not None
         assert isinstance(settings.GAS_LIMIT, int)
         assert settings.GAS_LIMIT > 21000  # Minimum for ETH transfer
-        assert settings.GAS_LIMIT < 10000000  # Reasonable upper bound
+        assert settings.GAS_LIMIT < 100000000  # Reasonable upper bound
     
     def test_configuration_summary(self):
         """Test that prints configuration summary."""

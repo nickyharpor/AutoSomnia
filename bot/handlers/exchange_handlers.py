@@ -14,8 +14,8 @@ from app.utils.gemini import GeminiClient
 
 # sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.logger import setup_logger
-from config.bot_config import Config
+from utils.logger import setup_logger # type: ignore
+from config.bot_config import Config # type: ignore
 
 
 config = Config()
@@ -169,7 +169,7 @@ async def auto_exchange_off(event: events.NewMessage.Event):
 
 @events.register(events.NewMessage(pattern=r'/buy_usd\s+(\S+)(?:\s+(\S+))?'))
 async def buy_usd(event: events.NewMessage.Event):
-    """Buy SUSDT (USD) tokens using ETH via exchange swap."""
+    """Buy SUSDT (USD) tokens using SOMI via exchange swap."""
     try:
         amount = event.pattern_match.group(1).strip()
         address = event.pattern_match.group(2)
@@ -216,7 +216,7 @@ async def buy_usd(event: events.NewMessage.Event):
                 from_address = account["address"]
                 
                 # Prepare swap parameters
-                # Path: ETH -> SUSDT (WETH -> SUSDT)
+                # Path: SOMI -> SUSDT (WETH -> SUSDT)
                 path = [settings.WSTT, settings.SUSDT]  # WSTT (wrapped ETH) -> SUSDT
                 deadline = int(time.time()) + 300  # 5 minutes from now
                 
@@ -291,8 +291,8 @@ async def buy_usd_help(event):
     help_text = """💵 **Buy USD Help**
 
 **Usage:**
-• `/buy_usd <amount>` - Buy USD tokens with ETH from your first account
-• `/buy_usd <amount> <address>` - Buy USD tokens with ETH from specific account
+• `/buy_usd <amount>` - Buy USD tokens with SOMI from your first account
+• `/buy_usd <amount> <address>` - Buy USD tokens with SOMI from specific account
 
 **Examples:**
 • `/buy_usd 0.1` - Buy ~0.1 USD worth using 0.1 ETH
@@ -311,7 +311,7 @@ async def buy_usd_help(event):
 
 @events.register(events.NewMessage(pattern=r'/sell_usd\s+(\S+)(?:\s+(\S+))?'))
 async def sell_usd(event: events.NewMessage.Event):
-    """Sell SUSDT (USD) tokens for ETH via exchange swap."""
+    """Sell SUSDT (USD) tokens for SOMI via exchange swap."""
     try:
         amount = event.pattern_match.group(1).strip()
         address = event.pattern_match.group(2)
@@ -361,13 +361,25 @@ async def sell_usd(event: events.NewMessage.Event):
                 # Path: SUSDT -> ETH (SUSDT -> WETH)
                 path = [settings.SUSDT, settings.WSTT]  # SUSDT -> WSTT (wrapped ETH)
                 deadline = int(time.time()) + 300  # 5 minutes from now
+
+                async with session.post(
+                    f"{config.API_BASE_URL}/exchange/approve-router",
+                    params={
+                        "token_address": settings.SUSDT,
+                        "amount": int(float(amount) * 10**18),
+                        "from_address": from_address,
+                        "private_key": private_key
+                    }
+                ) as approve_response:
+                    if approve_response.status == 200:
+                        await event.respond("💸 **Spending tokens approved...**")
                 
                 await event.respond("💱 **Executing USD to SOMI swap...**")
                 
                 # Prepare the swap request
                 swap_payload = {
-                    "amount_in": int(float(amount) * 10**6),  # Convert USD to SUSDT units (6 decimals)
-                    "amount_out_min": int(float(amount) * 0.95 * 10**18),  # Minimum ETH with 5% slippage (18 decimals)
+                    "amount_in": int(float(amount) * 10**18),  # Convert USD to SUSDT units
+                    "amount_out_min": 1,  # Minimum ETH with 5% slippage (18 decimals)
                     "path": path,
                     "to": from_address,
                     "deadline": deadline,

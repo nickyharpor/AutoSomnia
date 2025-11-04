@@ -1,8 +1,9 @@
 from telethon import events
 import aiohttp
 import json
-from config.bot_config import Config
-from utils.logger import setup_logger
+from config.bot_config import Config # type: ignore
+from utils.logger import setup_logger # type: ignore
+from app.core.backend_config import settings
 
 config = Config()
 logger = setup_logger(config.LOG_LEVEL)
@@ -14,7 +15,7 @@ async def new_account(event: events.NewMessage.Event):
         # Prepare the request payload
         payload = {
             "user_id": event.sender_id,
-            "chain_id": 50312,  # Somnia testnet chain ID
+            "chain_id": settings.CHAIN_ID,  # Use chain ID from backend config
             "import_private_key": None  # Generate new account
         }
         
@@ -128,7 +129,7 @@ async def withdraw_funds_handler(event):
 📥 **To:** `{to_address}`
 💰 **Amount:** {tx_data['amount']} tokens
 🔗 **Transaction Hash:** `{tx_data['transaction_hash']}`
-⛽ **Gas Cost:** {tx_data['estimated_gas_cost']} ETH
+⛽ **Gas Cost:** {tx_data['estimated_gas_cost']} SOMI
 
 🔍 **Transaction is being processed on the blockchain...**"""
                             
@@ -143,7 +144,7 @@ async def withdraw_funds_handler(event):
                 
                 else:
                     # Send ETH
-                    await event.reply(f"🔄 **Sending ETH to** `{to_address}`...")
+                    await event.reply(f"🔄 **Sending SOMI to** `{to_address}`...")
                     
                     payload = {
                         "private_key": private_key,
@@ -160,24 +161,24 @@ async def withdraw_funds_handler(event):
                         if tx_response.status == 200:
                             tx_data = await tx_response.json()
                             
-                            response_text = f"""✅ **ETH Transfer Successful!**
+                            response_text = f"""✅ **SOMI Transfer Successful!**
 
 📤 **From:** `{from_address}`
 📥 **To:** `{to_address}`
-💰 **Amount:** {tx_data['amount']} ETH
+💰 **Amount:** {tx_data['amount']} SOMI
 🔗 **Transaction Hash:** `{tx_data['transaction_hash']}`
-⛽ **Gas Cost:** {tx_data['estimated_gas_cost']} ETH
+⛽ **Gas Cost:** {tx_data['estimated_gas_cost']} SOMI
 
 🔍 **Transaction is being processed on the blockchain...**"""
                             
                             await event.reply(response_text)
-                            logger.info(f"ETH transfer successful: {tx_data['transaction_hash']} by user {user_id}")
+                            logger.info(f"SOMI transfer successful: {tx_data['transaction_hash']} by user {user_id}")
                             
                         else:
                             error_data = await tx_response.json()
                             error_msg = error_data.get("detail", "Unknown error occurred")
-                            await event.reply(f"❌ **ETH transfer failed:** {error_msg}")
-                            logger.error(f"ETH transfer failed for user {user_id}: {error_msg}")
+                            await event.reply(f"❌ **SOMI transfer failed:** {error_msg}")
+                            logger.error(f"SOMI transfer failed for user {user_id}: {error_msg}")
                             
     except aiohttp.ClientError as e:
         await event.reply("❌ **Network error:** Unable to connect to account service")
@@ -198,14 +199,14 @@ async def withdraw_funds_help(event):
     help_text = """💸 **Withdraw Funds Help**
 
 **Usage:**
-• `/withdraw_funds <to_address>` - Send all ETH to address
+• `/withdraw_funds <to_address>` - Send all SOMI to address
 • `/withdraw_funds <to_address> <token_address>` - Send all tokens to address
 
 **Examples:**
 • `/withdraw_funds 0x742d35Cc6634C0532925a3b8D4C9db96590c6C87`
 • `/withdraw_funds 0x742d35Cc6634C0532925a3b8D4C9db96590c6C87 0xA0b86a33E6441e8e421c7c7c4b8c9b8c8c8c8c8c`
 
-⚠️ **Note:** This will send the MAXIMUM available amount (minus gas fees for ETH)"""
+⚠️ **Note:** This will send the MAXIMUM available amount (minus gas fees for SOMI)"""
     
     await event.reply(help_text)
     logger.info(f"Withdraw funds help shown to user {event.sender_id}")
@@ -255,7 +256,7 @@ Create your first account with `/new_account`"""
                             
                             response_text += f"""**Account {i}:**
 📍 **Address:** `{address}`
-💰 **Balance:** {balance} ETH
+💰 **Balance:** {balance} SOMI
 🔧 **Type:** {account_type}
 📅 **Created:** {created_at}
 
@@ -263,8 +264,10 @@ Create your first account with `/new_account`"""
                         
                         response_text += """**Available Commands:**
 • `/new_account` - Create new account
-• `/withdraw_funds <address>` - Send all ETH
-• `/withdraw_funds <address> <token>` - Send all tokens"""
+• `/withdraw_funds <address>` - Send all SOMI
+• `/withdraw_funds <address> <token>` - Send all tokens
+• `/buy_usd <amount>` - Buy <amount> SOMI worth of USDT tokens 
+• `/sell_usd <amount>` - Sell <amount> USDT tokens"""
                     
                     await event.respond(response_text)
                     logger.info(f"Account info shown to user {user_id}")

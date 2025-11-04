@@ -42,14 +42,60 @@ class SomniaExchangeService:
 
         logger.info(f"SomniaExchangeService initialized with contract at {self.contract_address}")
 
+    def _validate_private_key(self, private_key: str) -> str:
+        """Validate and fix private key format."""
+        if not private_key:
+            raise ValueError("Private key cannot be None or empty")
+        
+        private_key = str(private_key).strip()
+        if not private_key.startswith('0x'):
+            private_key = '0x' + private_key
+        
+        # Validate private key length and format
+        if len(private_key) != 66:
+            raise ValueError(f"Invalid private key length: {len(private_key)}, expected 66 characters (0x + 64 hex). Key: {private_key[:10]}...")
+        
+        # Validate private key hex format
+        try:
+            int(private_key[2:], 16)
+        except ValueError as e:
+            raise ValueError(f"Invalid private key hex format: {private_key[:10]}... Error: {e}")
+        
+        return private_key
+
     def _validate_address(self, address: str) -> str:
         """Validate and fix address format."""
+        # Handle None or empty addresses
+        if not address:
+            raise ValueError(f"Address cannot be None or empty: {address}")
+        
+        # Convert to string if needed
+        address = str(address).strip()
+        
         if not address.startswith('0x'):
             address = '0x' + address
-        # Pad address to 42 characters (0x + 40 hex chars)
-        if len(address) < 42:
-            address = address + '0' * (42 - len(address))
-        return Web3.to_checksum_address(address)
+        
+        # Validate address length and format
+        if len(address) != 42:
+            raise ValueError(f"Invalid address length: {len(address)}, expected 42 characters. Address: '{address}'")
+        
+        # Validate hex format - check each character
+        hex_part = address[2:]
+        for i, char in enumerate(hex_part):
+            if char not in '0123456789abcdefABCDEF':
+                raise ValueError(f"Invalid hex character '{char}' at position {i+2} in address: '{address}'")
+        
+        # Validate hex format
+        try:
+            int(hex_part, 16)  # Check if the part after 0x is valid hex
+        except ValueError as e:
+            raise ValueError(f"Invalid hex address format: '{address}'. Hex part: '{hex_part}'. Error: {e}")
+        
+        try:
+            result = Web3.to_checksum_address(address)
+            return result
+        except Exception as e:
+            raise ValueError(f"Failed to convert to checksum address: '{address}'. Error: {e}")
 
     # ==================== View Functions ====================
 
@@ -281,25 +327,67 @@ class SomniaExchangeService:
     ) -> TxReceipt:
         """Swap exact amount of tokens for tokens."""
         try:
+            logger.info(f"Starting swap_exact_tokens_for_tokens with path: {path}")
+            
+            # Validate path
+            if not path or len(path) < 2:
+                raise ValueError(f"Invalid swap path: must contain at least 2 addresses, got {len(path) if path else 0}: {path}")
+            
+            # Validate all addresses
             path = [self._validate_address(addr) for addr in path]
             to = self._validate_address(to)
             from_address = self._validate_address(from_address)
             from_address_checksum = Web3.to_checksum_address(from_address)
+            
+            logger.info(f"All addresses validated successfully. Path: {path}")
 
-            tx = await self.contract.functions.swapExactTokensForTokens(
-                amount_in, amount_out_min, path, to, deadline
-            ).build_transaction({
-                "from": from_address,
-                "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
-                "gas": settings.GAS_LIMIT,
-                "gasPrice": await self.w3.eth.gas_price,
-            })
+            logger.info(f"Building transaction with parameters:")
+            logger.info(f"  amount_in: {amount_in}")
+            logger.info(f"  amount_out_min: {amount_out_min}")
+            logger.info(f"  path: {path}")
+            logger.info(f"  to: {to}")
+            logger.info(f"  deadline: {deadline}")
+            logger.info(f"  from_address: {from_address}")
+            
+            try:
+                tx = await self.contract.functions.swapExactTokensForTokens(
+                    amount_in, amount_out_min, path, to, deadline
+                ).build_transaction({
+                    "from": from_address,
+                    "nonce": await self.w3.eth.get_transaction_count(from_address_checksum),
+                    "gas": settings.GAS_LIMIT,
+                    "gasPrice": await self.w3.eth.gas_price,
+                })
+                logger.info(f"Transaction built successfully: {tx}")
+            except Exception as e:
+                logger.error(f"Error building transaction: {e}")
+                raise
 
-            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-            receipt = await self.w3.eth.wait_for_transaction_receipt(tx_hash)
-            logger.info(f"Swap exact tokens for tokens transaction: {tx_hash.hex()}")
-            return receipt
+            # Validate private key
+            private_key = self._validate_private_key(private_key)
+            logger.info(f"Signing transaction with validated private_key length: {len(private_key)}")
+            
+            try:
+                signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
+                logger.info(f"Transaction signed successfully")
+            except Exception as e:
+                logger.error(f"Error signing transaction: {e}")
+                raise
+
+            try:
+                tx_hash = await self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+                logger.info(f"Transaction sent successfully: {tx_hash.hex()}")
+            except Exception as e:
+                logger.error(f"Error sending transaction: {e}")
+                raise
+
+            try:
+                receipt = await self.w3.eth.wait_for_transaction_receipt(tx_hash)
+                logger.info(f"Swap exact tokens for tokens transaction: {tx_hash.hex()}")
+                return receipt
+            except Exception as e:
+                logger.error(f"Error waiting for transaction receipt: {e}")
+                raise
         except Exception as e:
             logger.error(f"Error swapping exact tokens for tokens: {e}")
             raise

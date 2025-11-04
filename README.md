@@ -303,6 +303,9 @@ git clone https://github.com/nickyharpor/AutoSomnia.git
 # Create a feature branch
 git checkout -b feature/amazing-feature
 
+# Make sure all tests pass
+pytest -s -v
+
 # Make your changes and commit
 git commit -m "Add amazing feature"
 
@@ -312,9 +315,8 @@ git push origin feature/amazing-feature
 
 ---
 
-## 📞 Contact & Support
+## 📞 Support
 
-- **GitHub**: [AutoSomnia Repository](https://github.com/nickyharpor/AutoSomnia.git)
 - **Issues**: [Bug Reports & Feature Requests](https://github.com/nickyharpor/AutoSomnia/issues)
 
 

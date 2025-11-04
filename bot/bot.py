@@ -3,7 +3,7 @@ import signal
 from typing import Optional
 
 from telethon import TelegramClient
-from telethon.errors import RPCError
+from telethon.errors import RPCError, AuthKeyError, FloodWaitError
 
 from config.bot_config import Config
 from utils.logger import setup_logger
@@ -67,10 +67,20 @@ class TelegramBot:
         logger.info("Handlers registered: basic, account, and exchange handlers")
 
     async def start(self) -> None:
-        """Start the bot with logging and keep it running until disconnected."""
+        """Start the bot and register handlers."""
         logger.info("Starting Telegram bot...")
         try:
-            await self.client.start(bot_token=self.config.BOT_TOKEN)
+            # Start the client
+            await self.client.start(bot_token=self.config.BOT_TOKEN) # type: ignore
+            self._register_handlers()
+            logger.info("Bot started successfully")
+            
+        except AuthKeyError:
+            logger.error("Authentication failed. Check your API credentials.")
+            raise
+        except FloodWaitError as e:
+            logger.error(f"Rate limited by Telegram. Wait {e.seconds} seconds.")
+            raise
         except RPCError as e:
             logger.error(f"Telegram RPC error during start: {e}")
             raise
@@ -78,10 +88,13 @@ class TelegramBot:
             logger.error(f"Unexpected error during client start: {e}")
             raise
 
-        self._register_handlers()
-        logger.info("Bot started successfully")
-
-        await self.client.run_until_disconnected()
+    async def run_until_disconnected(self) -> None:
+        """Run the bot until disconnected."""
+        try:
+            await self.client.run_until_disconnected() # type: ignore
+        except Exception as e:
+            logger.error(f"Error while running bot: {e}")
+            raise
 
     async def stop(self) -> None:
         """Signal-safe shutdown: disconnect client and mark stopping."""
@@ -90,7 +103,7 @@ class TelegramBot:
         self._stopping.set()
         try:
             if self.client.is_connected():
-                await self.client.disconnect()
+                await self.client.disconnect() # type: ignore
         except Exception as e:
             logger.warning(f"Error while disconnecting client: {e}")
 
@@ -101,7 +114,13 @@ async def run_with_retries(bot: TelegramBot, retries: int = 3, base_delay: float
     while True:
         try:
             await bot.start()
+            # After successful start, run until disconnected
+            await bot.run_until_disconnected()
             return
+        except (AuthKeyError, ValueError) as e:
+            # Don't retry on authentication or config errors
+            logger.error(f"Fatal error, not retrying: {e}")
+            raise
         except Exception as run_with_retries_exception:
             attempt += 1
             if attempt > retries:

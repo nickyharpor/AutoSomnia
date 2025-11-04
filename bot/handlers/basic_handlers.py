@@ -81,7 +81,8 @@ Sweet dreams, profitable trades! 🌙"""
 • `/account_info` - Check your balances
 • `/suggest_exchange` - Get fresh trading advice
 • `/buy_usd <amount>` - Buy USD tokens
-• `/sell_usd <amount>` - Sell USD tokens
+• `/auto_exchange_on` - Enable automated trading
+• `/withdraw_funds <address>` - Withdraw all SOMI to <address>
 
 💡 **Need help?** Use `/help` to see all available commands.
 
@@ -116,12 +117,12 @@ async def help_handler(event: events.NewMessage.Event):
 • `/new_account` - Create a new Web3 wallet
 • `/account_info` - View your account details and balances
 • `/withdraw_funds <address>` - Send all SOMI to address
-• `/withdraw_funds <address> <token>` - Send all tokens
+• `/withdraw_funds <address> <token>` - Send all tokens to address
 
 **💱 Trading Commands:**
 • `/suggest_exchange` - Get AI-powered trading advice
-• `/buy_usd <amount>` - Buy USD tokens with SOM
-• `/sell_usd <amount>` - Sell USD tokens for SOM
+• `/buy_usd <amount>` - Buy USD tokens with SOMI
+• `/sell_usd <amount>` - Sell USD tokens for SOMI
 • `/auto_exchange_on` - Enable automated trading
 • `/auto_exchange_off` - Disable automated trading
 
@@ -131,7 +132,7 @@ async def help_handler(event: events.NewMessage.Event):
 
 **💡 Examples:**
 • `/new_account` - Creates your first wallet
-• `/buy_usd 0.1` - Buys $0.1 worth of USD tokens
+• `/buy_usd 0.1` - Buys 0.1 SOMI worth of USDT tokens
 • `/suggest_exchange` - Gets AI trading recommendation
 
 **⚠️ Need help?** Each command shows detailed help when used without parameters.
