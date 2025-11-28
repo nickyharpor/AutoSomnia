@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.backend_config import settings
 from app.core.mongodb import MongoDBManager
-from app.api.routes import account, exchange, users
+from app.api.routes import account, exchange, user, auth, gateway
 
 # Setup logging
 logging.basicConfig(
@@ -183,6 +183,7 @@ async def root():
         "docs": "/docs",
         "health": "/health",
         "endpoints": {
+            "auth": "/auth",
             "accounts": "/account",
             "exchange": "/exchange",
             "users": "/users"
@@ -191,9 +192,11 @@ async def root():
 
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(account.router)
 app.include_router(exchange.router)
-app.include_router(users.router)
+app.include_router(user.router)
+app.include_router(gateway.router)
 
 
 # Dependency for database connection

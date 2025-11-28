@@ -1,0 +1,229 @@
+/**
+ * Somnia Payment Gateway - Frontend Styles
+ * 
+ * This stylesheet provides styling for the Somnia cryptocurrency payment method
+ * in the checkout and order pages.
+ */
+
+/* Payment Method Selection */
+.payment-method .somnia-payment-logo {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.payment-method .somnia-logo-icon {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.payment-method-title.field.choice label {
+    display: flex;
+    align-items: center;
+}
+
+/* Payment Method Description */
+.somnia-payment-description {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    border-left: 4px solid #1979c3;
+}
+
+.somnia-payment-info {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.somnia-info-text {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.somnia-info-details {
+    margin: 10px 0;
+    color: #666;
+}
+
+.somnia-payment-steps {
+    margin: 15px 0;
+    padding-left: 20px;
+    color: #555;
+}
+
+.somnia-payment-steps li {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.somnia-info-note {
+    margin: 15px 0 0 0;
+    padding: 10px;
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    font-size: 13px;
+    color: #856404;
+}
+
+.somnia-info-note em {
+    font-style: normal;
+}
+
+.somnia-additional-instructions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+
+/* Payment Info Block (Order Success / History) */
+.somnia-payment-info-block {
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #fafafa;
+}
+
+.somnia-payment-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.somnia-payment-header .somnia-payment-logo {
+    margin-right: 10px;
+}
+
+.somnia-payment-header strong {
+    font-size: 16px;
+    color: #333;
+}
+
+.somnia-payment-details {
+    margin-top: 10px;
+}
+
+.somnia-payment-data {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 10px;
+    margin: 0;
+}
+
+.somnia-payment-data dt {
+    font-weight: 600;
+    color: #555;
+}
+
+.somnia-payment-data dd {
+    margin: 0;
+    color: #333;
+}
+
+.somnia-payment-data dd.somnia-status-paid {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.somnia-payment-data dd.somnia-status-pending {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+.somnia-payment-data dd.somnia-status-failed,
+.somnia-payment-data dd.somnia-status-expired {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.somnia-payment-pending {
+    padding: 15px;
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    border-radius: 4px;
+}
+
+.somnia-payment-pending p {
+    margin: 0;
+    color: #856404;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .somnia-payment-description {
+        padding: 10px;
+    }
+    
+    .somnia-payment-steps {
+        padding-left: 15px;
+        font-size: 13px;
+    }
+    
+    .somnia-payment-data {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    
+    .somnia-payment-data dt {
+        margin-top: 10px;
+    }
+    
+    .somnia-payment-data dd {
+        margin-bottom: 5px;
+    }
+}
+
+/* Checkout Actions */
+.payment-method .actions-toolbar {
+    margin-top: 20px;
+}
+
+.payment-method .actions-toolbar .primary button.checkout {
+    background-color: #1979c3;
+    border-color: #1979c3;
+    color: #fff;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.payment-method .actions-toolbar .primary button.checkout:hover {
+    background-color: #145a8c;
+    border-color: #145a8c;
+}
+
+.payment-method .actions-toolbar .primary button.checkout.disabled,
+.payment-method .actions-toolbar .primary button.checkout:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Loading State */
+.payment-method .somnia-payment-loading {
+    text-align: center;
+    padding: 20px;
+}
+
+.payment-method .somnia-payment-loading:after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #1979c3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

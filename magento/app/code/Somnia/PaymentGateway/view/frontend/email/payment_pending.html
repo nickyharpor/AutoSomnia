@@ -1,0 +1,26 @@
+<!--
+/**
+ * Copyright © Somnia. All rights reserved.
+ * Payment Pending Note Template (for inclusion in other emails)
+ */
+-->
+<!--@vars {
+"var payment_method":"string",
+"var payment_timeout":"string"
+} @-->
+
+<table class="payment-pending-note" style="margin: 20px 0; border: 2px solid #ffc107; background-color: #fff9e6;">
+    <tr>
+        <td style="padding: 15px;">
+            <h3 style="margin-top: 0; color: #856404;">{{trans "Payment Pending"}}</h3>
+            <p>{{trans "Your order is awaiting cryptocurrency payment confirmation."}}</p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>{{trans "Payment Method: %method" method=$payment_method}}</li>
+                <li>{{trans "Payment must be completed within %timeout minutes" timeout=$payment_timeout}}</li>
+                <li>{{trans "You will receive a confirmation email once payment is verified"}}</li>
+                <li>{{trans "Payment confirmation may take a few minutes due to blockchain processing"}}</li>
+            </ul>
+            <p style="margin-bottom: 0;"><strong>{{trans "Please do not close your browser until payment is complete."}}</strong></p>
+        </td>
+    </tr>
+</table>

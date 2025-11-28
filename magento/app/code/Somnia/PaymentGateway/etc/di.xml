@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Somnia Payment Gateway - Dependency Injection Configuration
+ *
+ * @category    Somnia
+ * @package     Somnia_PaymentGateway
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    
+    <!-- Register payment method with Magento payment framework -->
+    <type name="Magento\Payment\Helper\Data">
+        <arguments>
+            <argument name="methodCodes" xsi:type="array">
+                <item name="somnia_gateway" xsi:type="const">Somnia\PaymentGateway\Model\Payment::CODE</item>
+            </argument>
+        </arguments>
+    </type>
+    
+    <!-- Configure payment method facade -->
+    <virtualType name="SomniaPaymentGatewayFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Somnia\PaymentGateway\Model\Payment::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">SomniaPaymentGatewayValueHandlerPool</argument>
+        </arguments>
+    </virtualType>
+    
+    <!-- Value handler pool for payment method -->
+    <virtualType name="SomniaPaymentGatewayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">SomniaPaymentGatewayConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    
+    <!-- Config value handler -->
+    <virtualType name="SomniaPaymentGatewayConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">Somnia\PaymentGateway\Model\Config</argument>
+        </arguments>
+    </virtualType>
+    
+    <!-- Configure HTTP client for gateway communication -->
+    <type name="Somnia\PaymentGateway\Model\Gateway\Client">
+        <arguments>
+            <argument name="config" xsi:type="object">Somnia\PaymentGateway\Model\Config</argument>
+            <argument name="curl" xsi:type="object">Magento\Framework\HTTP\Client\Curl</argument>
+            <argument name="logger" xsi:type="object">SomniaPaymentGatewayLogger</argument>
+        </arguments>
+    </type>
+    
+    <!-- Configure payment method model -->
+    <type name="Somnia\PaymentGateway\Model\Payment">
+        <arguments>
+            <argument name="config" xsi:type="object">Somnia\PaymentGateway\Model\Config</argument>
+            <argument name="urlBuilder" xsi:type="object">Magento\Framework\UrlInterface</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
+            <argument name="gatewayClient" xsi:type="object">Somnia\PaymentGateway\Model\Gateway\Client</argument>
+            <argument name="customLogger" xsi:type="object">SomniaPaymentGatewayLogger</argument>
+        </arguments>
+    </type>
+    
+    <!-- Configure callback controller -->
+    <type name="Somnia\PaymentGateway\Controller\Callback\Index">
+        <arguments>
+            <argument name="resultJsonFactory" xsi:type="object">Magento\Framework\Controller\Result\JsonFactory</argument>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="gatewayClient" xsi:type="object">Somnia\PaymentGateway\Model\Gateway\Client</argument>
+            <argument name="statusResponse" xsi:type="object">Somnia\PaymentGateway\Model\Gateway\Response\StatusResponse</argument>
+            <argument name="config" xsi:type="object">Somnia\PaymentGateway\Model\Config</argument>
+            <argument name="logger" xsi:type="object">SomniaPaymentGatewayLogger</argument>
+            <argument name="orderSender" xsi:type="object">Magento\Sales\Model\Order\Email\Sender\OrderSender</argument>
+        </arguments>
+    </type>
+    
+    <!-- Configure test connection controller -->
+    <type name="Somnia\PaymentGateway\Controller\Adminhtml\System\Config\TestConnection">
+        <arguments>
+            <argument name="resultJsonFactory" xsi:type="object">Magento\Framework\Controller\Result\JsonFactory</argument>
+            <argument name="gatewayClient" xsi:type="object">Somnia\PaymentGateway\Model\Gateway\Client</argument>
+            <argument name="logger" xsi:type="object">SomniaPaymentGatewayLogger</argument>
+        </arguments>
+    </type>
+    
+    <!-- Custom logger for Somnia payment gateway -->
+    <virtualType name="SomniaPaymentGatewayLogger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="name" xsi:type="string">somnia_payment</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">SomniaPaymentGatewayLogHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    
+    <!-- Custom log handler for dedicated log file -->
+    <virtualType name="SomniaPaymentGatewayLogHandler" type="Magento\Framework\Logger\Handler\Base">
+        <arguments>
+            <argument name="fileName" xsi:type="string">/var/log/somnia_payment.log</argument>
+        </arguments>
+    </virtualType>
+    
+    <!-- Configure config provider -->
+    <type name="Somnia\PaymentGateway\Model\Config">
+        <arguments>
+            <argument name="scopeConfig" xsi:type="object">Magento\Framework\App\Config\ScopeConfigInterface</argument>
+        </arguments>
+    </type>
+    
+    <!-- Plugin to add payment information to order emails -->
+    <type name="Magento\Sales\Model\Order\Email\Sender\OrderSender">
+        <plugin name="somnia_add_payment_info_to_order_email" type="Somnia\PaymentGateway\Plugin\AddPaymentInfoToOrderEmail" sortOrder="10"/>
+    </type>
+    
+    <!-- Configure payment instructions email observer -->
+    <type name="Somnia\PaymentGateway\Observer\SendPaymentInstructionsEmail">
+        <arguments>
+            <argument name="config" xsi:type="object">Somnia\PaymentGateway\Model\Config</argument>
+            <argument name="transportBuilder" xsi:type="object">Magento\Framework\Mail\Template\TransportBuilder</argument>
+            <argument name="inlineTranslation" xsi:type="object">Magento\Framework\Translate\Inline\StateInterface</argument>
+            <argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
+            <argument name="logger" xsi:type="object">SomniaPaymentGatewayLogger</argument>
+        </arguments>
+    </type>
+    
+    <!-- Configure payment info email block -->
+    <type name="Somnia\PaymentGateway\Block\Email\PaymentInfo">
+        <arguments>
+            <argument name="config" xsi:type="object">Somnia\PaymentGateway\Model\Config</argument>
+            <argument name="gatewayClient" xsi:type="object">Somnia\PaymentGateway\Model\Gateway\Client</argument>
+        </arguments>
+    </type>
+    
+</config>

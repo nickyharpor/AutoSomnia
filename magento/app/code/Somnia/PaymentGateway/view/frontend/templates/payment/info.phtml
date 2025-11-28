@@ -1,0 +1,48 @@
+<?php
+/**
+ * Somnia Payment Gateway - Payment Info Template
+ * 
+ * This template displays payment information on the order success page
+ * and in the customer's order history.
+ * 
+ * @var $block \Magento\Payment\Block\Info
+ */
+?>
+<div class="somnia-payment-info-block">
+    <div class="somnia-payment-header">
+        <img src="<?php echo $block->getViewFileUrl('Somnia_PaymentGateway::images/somnia-logo.svg'); ?>" 
+             alt="<?php echo __('Somnia Cryptocurrency Payment'); ?>" 
+             class="somnia-payment-logo"
+             width="32"
+             height="32" />
+        <strong><?php echo __('Cryptocurrency Payment (SOMI)'); ?></strong>
+    </div>
+    
+    <?php if ($block->getInfo()->getAdditionalInformation('somnia_payment_id')): ?>
+    <div class="somnia-payment-details">
+        <dl class="somnia-payment-data">
+            <dt><?php echo __('Payment ID:'); ?></dt>
+            <dd><?php echo $block->escapeHtml($block->getInfo()->getAdditionalInformation('somnia_payment_id')); ?></dd>
+            
+            <?php if ($block->getInfo()->getAdditionalInformation('somnia_crypto_amount')): ?>
+            <dt><?php echo __('Crypto Amount:'); ?></dt>
+            <dd>
+                <?php echo $block->escapeHtml($block->getInfo()->getAdditionalInformation('somnia_crypto_amount')); ?>
+                <?php echo $block->escapeHtml($block->getInfo()->getAdditionalInformation('somnia_crypto_symbol') ?: 'SOMI'); ?>
+            </dd>
+            <?php endif; ?>
+            
+            <?php if ($block->getInfo()->getAdditionalInformation('somnia_payment_status')): ?>
+            <dt><?php echo __('Payment Status:'); ?></dt>
+            <dd class="somnia-status-<?php echo strtolower($block->escapeHtml($block->getInfo()->getAdditionalInformation('somnia_payment_status'))); ?>">
+                <?php echo $block->escapeHtml($block->getInfo()->getAdditionalInformation('somnia_payment_status')); ?>
+            </dd>
+            <?php endif; ?>
+        </dl>
+    </div>
+    <?php else: ?>
+    <div class="somnia-payment-pending">
+        <p><?php echo __('Your cryptocurrency payment is being processed. You will receive an email confirmation once the payment is complete.'); ?></p>
+    </div>
+    <?php endif; ?>
+</div>

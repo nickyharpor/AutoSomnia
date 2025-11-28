@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Somnia Payment Gateway - Default Configuration
+ *
+ * @category  Somnia
+ * @package   Somnia_PaymentGateway
+ * @author    Somnia Team
+ * @copyright Copyright (c) 2024 Somnia
+ * @license   MIT License
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <somnia_gateway>
+                <active>0</active>
+                <model>Somnia\PaymentGateway\Model\Payment</model>
+                <title>Cryptocurrency Payment (SOMI)</title>
+                <description>Pay with cryptocurrency using the Somnia Payment Gateway. You will be redirected to complete your payment securely.</description>
+                <gateway_url>http://localhost:5000</gateway_url>
+                <merchant_id></merchant_id>
+                <payment_timeout>30</payment_timeout>
+                <debug>0</debug>
+                <sort_order>100</sort_order>
+                <can_authorize>1</can_authorize>
+                <can_capture>0</can_capture>
+                <can_void>0</can_void>
+                <can_use_checkout>1</can_use_checkout>
+                <can_use_internal>0</can_use_internal>
+                <is_gateway>1</is_gateway>
+                <payment_action>authorize</payment_action>
+            </somnia_gateway>
+        </payment>
+    </default>
+</config>

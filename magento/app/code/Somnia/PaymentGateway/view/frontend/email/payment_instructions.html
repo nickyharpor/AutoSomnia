@@ -1,0 +1,84 @@
+<!--
+/**
+ * Copyright © Somnia. All rights reserved.
+ * Payment Instructions Email Template
+ */
+-->
+<!--@subject {{trans "Payment Instructions for Order #%order_id" order_id=$order.increment_id}} @-->
+<!--@vars {
+"var order":"Order",
+"var payment":"Payment",
+"var payment_url":"string",
+"var payment_timeout":"string"
+} @-->
+
+{{template config_path="design/email/header_template"}}
+
+<table class="message-info">
+    <tr>
+        <td>
+            <h2>{{trans "Complete Your Cryptocurrency Payment"}}</h2>
+            <p>{{trans "Thank you for your order! To complete your purchase, please follow the payment instructions below."}}</p>
+        </td>
+    </tr>
+</table>
+
+<table class="order-details">
+    <tr class="order-number">
+        <td>
+            <strong>{{trans "Order Number:"}}</strong> {{var order.increment_id}}
+        </td>
+    </tr>
+    <tr class="order-date">
+        <td>
+            <strong>{{trans "Order Date:"}}</strong> {{var order.created_at|date_format}}
+        </td>
+    </tr>
+    <tr class="order-total">
+        <td>
+            <strong>{{trans "Order Total:"}}</strong> {{var order.grand_total|currency}}
+        </td>
+    </tr>
+</table>
+
+<table class="payment-instructions">
+    <tr>
+        <td>
+            <h3>{{trans "Payment Instructions"}}</h3>
+            <ol>
+                <li>{{trans "Click the payment link below to proceed to the payment gateway"}}</li>
+                <li>{{trans "You will be redirected to complete your payment using SOMI cryptocurrency"}}</li>
+                <li>{{trans "After successful payment, you will receive an order confirmation email"}}</li>
+                <li>{{trans "Your order will be processed once payment is confirmed on the blockchain"}}</li>
+            </ol>
+        </td>
+    </tr>
+</table>
+
+<table class="payment-link">
+    <tr>
+        <td style="text-align: center; padding: 20px;">
+            <a href="{{var payment_url}}" style="background-color: #1979c3; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 3px; display: inline-block;">
+                {{trans "Complete Payment"}}
+            </a>
+        </td>
+    </tr>
+</table>
+
+<table class="payment-warning">
+    <tr>
+        <td style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107;">
+            <strong>{{trans "Important:"}}</strong> {{trans "This payment link will expire in %timeout minutes. Please complete your payment before the expiration time." timeout=$payment_timeout}}
+        </td>
+    </tr>
+</table>
+
+<table class="payment-note">
+    <tr>
+        <td>
+            <p><em>{{trans "Note: Your order is currently pending payment. Once we receive confirmation of your cryptocurrency payment, your order will be processed and shipped."}}</em></p>
+        </td>
+    </tr>
+</table>
+
+{{template config_path="design/email/footer_template"}}

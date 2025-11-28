@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Somnia. All rights reserved.
+ * Events Configuration
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <!-- Send payment instructions email after order is placed -->
+    <event name="sales_order_place_after">
+        <observer name="somnia_send_payment_instructions" instance="Somnia\PaymentGateway\Observer\SendPaymentInstructionsEmail"/>
+    </event>
+</config>

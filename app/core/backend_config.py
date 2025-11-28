@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     
     # Contract Addresses
     ROUTER_ADDRESS: str = "0xb98c15a0dC1e271132e341250703c7e94c059e8D"
+    STREAMS_CONTRACT: str = "0x6AB397FF662e42312c003175DCD76EfF69D048Fc"
 
     # Account Addresses
     PRIVATE_KEY: str = "0x0000000000000000000000000000000000000000000000000000000000000001"
@@ -26,6 +27,9 @@ class Settings(BaseSettings):
 
     # AI
     GEMINI_API_KEY: str = ''
+
+    # Authentication
+    JWT_SECRET_KEY: str = 'your-super-secret-jwt-key-change-this-in-production'
 
     # Database
     MONGODB_URL: str = 'mongodb://localhost:27017'

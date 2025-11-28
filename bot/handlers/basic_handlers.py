@@ -1,6 +1,6 @@
 from telethon import events
-from utils.logger import setup_logger
-from config.bot_config import Config
+from utils.logger import setup_logger # type: ignore
+from config.bot_config import Config # type: ignore
 import sys
 import os
 import aiohttp
@@ -28,8 +28,14 @@ async def start_handler(event: events.NewMessage.Event):
                     
                     if response.status == 404:
                         # 404 => User doesn't exist, create new user
+
+                        sender = await event.get_sender()
+
                         user_data = {
                             "user_id": user_id,
+                            "first_name": sender.first_name,
+                            "last_name": sender.last_name,
+                            "username": sender.username,
                             "auto_exchange": False
                         }
                         

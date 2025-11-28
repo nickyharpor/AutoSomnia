@@ -2,6 +2,19 @@
 .venv
 .idea
 .env
+.kiro
+.vscode
+.pytest_cache
 private
 *.session
 **/__pycache__
+
+
+# Node / React UI
+ui/node_modules/
+ui/dist/
+ui/dist-ssr/
+ui/.env
+ui/.env.local
+ui/.env.production
+ui/*.local

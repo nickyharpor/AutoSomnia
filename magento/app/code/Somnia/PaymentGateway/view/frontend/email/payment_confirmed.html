@@ -1,0 +1,35 @@
+<!--
+/**
+ * Copyright © Somnia. All rights reserved.
+ * Payment Confirmed Note Template (for inclusion in order confirmation emails)
+ */
+-->
+<!--@vars {
+"var payment_id":"string",
+"var crypto_symbol":"string",
+"var crypto_amount":"string"
+} @-->
+
+<table class="payment-confirmed-note" style="margin: 20px 0; border: 2px solid #28a745; background-color: #e8f5e9;">
+    <tr>
+        <td style="padding: 15px;">
+            <h3 style="margin-top: 0; color: #155724;">{{trans "Payment Confirmed"}}</h3>
+            <p>{{trans "Your cryptocurrency payment has been successfully confirmed!"}}</p>
+            <table class="payment-details" style="width: 100%; margin: 10px 0;">
+                <tr>
+                    <td style="padding: 5px 0;"><strong>{{trans "Payment ID:"}}</strong></td>
+                    <td style="padding: 5px 0;">{{var payment_id}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;"><strong>{{trans "Cryptocurrency:"}}</strong></td>
+                    <td style="padding: 5px 0;">{{var crypto_symbol}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;"><strong>{{trans "Amount Paid:"}}</strong></td>
+                    <td style="padding: 5px 0;">{{var crypto_amount}} {{var crypto_symbol}}</td>
+                </tr>
+            </table>
+            <p style="margin-bottom: 0;">{{trans "Your order is now being processed and will be shipped soon."}}</p>
+        </td>
+    </tr>
+</table>

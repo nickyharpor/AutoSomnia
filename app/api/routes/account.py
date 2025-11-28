@@ -53,7 +53,7 @@ async def create_account(
     """Create a new EVM account or import existing one."""
     try:
         # Create account using service
-        response = await service.create_account(request)
+        response = await service.create_evm_account(request)
         
         account_data = {
             "user_id": request.user_id,
@@ -63,9 +63,9 @@ async def create_account(
         }
         
         # Check if account already exists
-        existing = db.find_one("accounts", {"address": response.account.address})
+        existing = db.find_one("account", {"address": response.account.address})
         if not existing:
-            db.insert_one("accounts", account_data)
+            db.insert_one("account", account_data)
         
         return response
         
@@ -95,9 +95,9 @@ async def import_account_from_mnemonic(
         }
         
         # Check if account already exists
-        existing = db.find_one("accounts", {"address": response.account.address})
+        existing = db.find_one("account", {"address": response.account.address})
         if not existing:
-            db.insert_one("accounts", account_data)
+            db.insert_one("account", account_data)
         
         return response
         
@@ -198,14 +198,14 @@ async def list_accounts(
     """List all accounts stored in database."""
     try:
         accounts = db.find_many(
-            "accounts",
+            "account",
             filter_dict={},
             sort=("created_at", -1),
             limit=limit,
             skip=skip
         )
         
-        total_count = db.count_documents("accounts")
+        total_count = db.count_documents("account")
         
         return {
             "accounts": accounts,
@@ -228,14 +228,14 @@ async def list_user_accounts(
     """List all accounts stored in database."""
     try:
         accounts = db.find_many(
-            "accounts",
+            "account",
             filter_dict={"user_id": user_id},
             sort=("created_at", -1),
             limit=limit,
             skip=skip
         )
 
-        total_count = db.count_documents("accounts", {"user_id": user_id})
+        total_count = db.count_documents("account", {"user_id": user_id})
 
         return {
             "accounts": accounts,
@@ -255,7 +255,7 @@ async def get_account_details(
 ):
     """Get account details from database."""
     try:
-        account = db.find_one("accounts", {"address": address})
+        account = db.find_one("account", {"address": address})
         
         if not account:
             raise HTTPException(status_code=404, detail="Account not found")
@@ -275,7 +275,7 @@ async def remove_account(
 ):
     """Remove account from database."""
     try:
-        deleted_count = db.delete_one("accounts", {"address": address})
+        deleted_count = db.delete_one("account", {"address": address})
         
         if deleted_count == 0:
             raise HTTPException(status_code=404, detail="Account not found")
@@ -300,7 +300,7 @@ async def remove_user_with_accounts(
     """Remove user and all their associated accounts from database."""
     try:
         # Check if user exists
-        user = db.find_one("users", {"user_id": user_id})
+        user = db.find_one("user", {"user_id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         

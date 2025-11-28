@@ -1,0 +1,15 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="#6366F1"/>
+  
+  <!-- Cryptocurrency symbol -->
+  <path d="M16 6C10.477 6 6 10.477 6 16C6 21.523 10.477 26 16 26C21.523 26 26 21.523 26 16C26 10.477 21.523 6 16 6Z" fill="#6366F1"/>
+  <path d="M16 8C11.582 8 8 11.582 8 16C8 20.418 11.582 24 16 24C20.418 24 24 20.418 24 16C24 11.582 20.418 8 16 8Z" stroke="white" stroke-width="1.5"/>
+  
+  <!-- S symbol -->
+  <path d="M18.5 12.5C18.5 11.395 17.605 10.5 16.5 10.5H14C12.895 10.5 12 11.395 12 12.5C12 13.605 12.895 14.5 14 14.5H18C19.105 14.5 20 15.395 20 16.5C20 17.605 19.105 18.5 18 18.5H13.5C12.395 18.5 11.5 19.395 11.5 20.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Vertical line through S -->
+  <line x1="16" y1="9" x2="16" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="16" y1="20" x2="16" y2="22" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

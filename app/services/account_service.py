@@ -8,6 +8,8 @@ from eth_account import Account
 from mnemonic import Mnemonic
 from web3.types import Wei
 
+from app.models.gateway_models import PaymentAccountCreateRequest, PaymentAccountCreateResponse, PaymentAccount
+
 # Enable mnemonic features for eth_account
 Account.enable_unaudited_hdwallet_features()
 
@@ -167,7 +169,27 @@ class AccountService:
 
     # ==================== Account Creation/Import ====================
 
-    async def create_account(self, request: AccountCreateRequest) -> AccountCreateResponse:
+    async def create_account(self, request: PaymentAccountCreateRequest) -> PaymentAccountCreateResponse:
+        req = AccountCreateRequest(
+            chain_id=request.chain_id,
+            import_private_key=request.import_private_key,
+            user_id=0
+        )
+        res = await self.create_evm_account(req)
+        acc = PaymentAccount(
+            chain_id=res.account.chain_id,
+            address=res.account.address,
+            balance=res.account.balance,
+            private_key=res.account.private_key,
+            nonce=res.account.nonce,
+            memo=None
+        )
+        return PaymentAccountCreateResponse(
+            account=acc,
+            mnemonic=None
+        )
+
+    async def create_evm_account(self, request: AccountCreateRequest) -> AccountCreateResponse:
         """
         Create a new EVM account or import existing one.
         

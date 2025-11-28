@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Somnia Payment Gateway - Admin System Configuration
+ *
+ * @category  Somnia
+ * @package   Somnia_PaymentGateway
+ * @author    Somnia Team
+ * @copyright Copyright (c) 2024 Somnia
+ * @license   MIT License
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="somnia_gateway" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Somnia Cryptocurrency Payment</label>
+                <comment><![CDATA[Accept cryptocurrency payments (SOMI) through the Somnia Payment Gateway.]]></comment>
+                <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>payment/somnia_gateway/active</config_path>
+                    <comment><![CDATA[Enable or disable the Somnia cryptocurrency payment method.]]></comment>
+                </field>
+                
+                <field id="title" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Title</label>
+                    <config_path>payment/somnia_gateway/title</config_path>
+                    <comment><![CDATA[Payment method title displayed to customers during checkout.]]></comment>
+                    <validate>required-entry</validate>
+                    <backend_model>Somnia\PaymentGateway\Model\Config\Backend\Title</backend_model>
+                </field>
+                
+                <field id="description" translate="label" type="textarea" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Description</label>
+                    <config_path>payment/somnia_gateway/description</config_path>
+                    <comment><![CDATA[Payment method description shown to customers. Explain the cryptocurrency payment process.]]></comment>
+                    <backend_model>Somnia\PaymentGateway\Model\Config\Backend\Description</backend_model>
+                </field>
+
+                <field id="gateway_url" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Gateway URL</label>
+                    <config_path>payment/somnia_gateway/gateway_url</config_path>
+                    <comment><![CDATA[Base URL of the Somnia Payment Gateway (e.g., http://localhost:5000 or https://gateway.somnia.network). <strong>Use HTTPS in production.</strong>]]></comment>
+                    <validate>required-entry validate-url</validate>
+                    <backend_model>Somnia\PaymentGateway\Model\Config\Backend\GatewayUrl</backend_model>
+                </field>
+                
+                <field id="https_warning" translate="label" type="label" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label></label>
+                    <frontend_model>Somnia\PaymentGateway\Block\Adminhtml\System\Config\HttpsWarning</frontend_model>
+                </field>
+                
+                <field id="merchant_id" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Merchant ID</label>
+                    <config_path>payment/somnia_gateway/merchant_id</config_path>
+                    <comment><![CDATA[Your unique merchant identifier from the Somnia Payment Gateway. Must be a positive integer.]]></comment>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                    <backend_model>Somnia\PaymentGateway\Model\Config\Backend\MerchantId</backend_model>
+                </field>
+                
+                <field id="payment_timeout" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Payment Timeout (minutes)</label>
+                    <config_path>payment/somnia_gateway/payment_timeout</config_path>
+                    <comment><![CDATA[Time in minutes before a payment expires. Must be between 5 and 120 minutes. Default: 30 minutes.]]></comment>
+                    <validate>required-entry validate-digits validate-digits-range digits-range-5-120</validate>
+                    <backend_model>Somnia\PaymentGateway\Model\Config\Backend\PaymentTimeout</backend_model>
+                </field>
+                
+                <field id="test_connection" translate="label" type="button" sortOrder="65" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Test Connection</label>
+                    <frontend_model>Somnia\PaymentGateway\Block\Adminhtml\System\Config\TestConnection</frontend_model>
+                    <comment><![CDATA[Click to test connectivity to the payment gateway.]]></comment>
+                </field>
+                
+                <field id="allowed_ips" translate="label" type="textarea" sortOrder="68" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Allowed Callback IPs (Optional)</label>
+                    <config_path>payment/somnia_gateway/allowed_ips</config_path>
+                    <comment><![CDATA[Optional: Enter IP addresses allowed to send payment callbacks, one per line. Leave empty to allow all IPs. Use this for additional security if your gateway has static IPs.]]></comment>
+                    <backend_model>Somnia\PaymentGateway\Model\Config\Backend\AllowedIps</backend_model>
+                </field>
+                
+                <field id="debug" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Debug Mode</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>payment/somnia_gateway/debug</config_path>
+                    <comment><![CDATA[Enable detailed logging of all gateway communication. Logs are written to var/log/somnia_payment.log. Disable in production.]]></comment>
+                </field>
+                
+                <field id="sort_order" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Sort Order</label>
+                    <config_path>payment/somnia_gateway/sort_order</config_path>
+                    <comment><![CDATA[Display order of this payment method in checkout. Lower numbers appear first.]]></comment>
+                    <validate>validate-number</validate>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

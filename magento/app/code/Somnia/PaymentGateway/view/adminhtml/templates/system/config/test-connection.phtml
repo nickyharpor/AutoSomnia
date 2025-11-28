@@ -1,0 +1,88 @@
+<?php
+/**
+ * Somnia Payment Gateway - Test Connection Template
+ *
+ * @category    Somnia
+ * @package     Somnia_PaymentGateway
+ * @var $block \Somnia\PaymentGateway\Block\Adminhtml\System\Config\TestConnection
+ */
+?>
+<div id="somnia_test_connection_container">
+    <?= $block->getButtonHtml() ?>
+    <div id="somnia_test_connection_result" style="margin-top: 10px;"></div>
+</div>
+
+<script type="text/javascript">
+require([
+    'jquery',
+    'Magento_Ui/js/modal/alert',
+    'mage/translate'
+], function($, alert, $t) {
+    window.testSomniaConnection = function() {
+        var resultContainer = $('#somnia_test_connection_result');
+        var button = $('#somnia_test_connection_button');
+        
+        // Get configuration values from form
+        var gatewayUrl = $('#payment_somnia_gateway_gateway_url').val();
+        var merchantId = $('#payment_somnia_gateway_merchant_id').val();
+        
+        // Validate inputs
+        if (!gatewayUrl) {
+            resultContainer.html('<span style="color: red;">' + $t('Please enter Gateway URL before testing.') + '</span>');
+            return;
+        }
+        
+        if (!merchantId) {
+            resultContainer.html('<span style="color: red;">' + $t('Please enter Merchant ID before testing.') + '</span>');
+            return;
+        }
+        
+        // Disable button and show loading
+        button.prop('disabled', true);
+        resultContainer.html('<span style="color: #666;">' + $t('Testing connection...') + '</span>');
+        
+        // Make AJAX request
+        $.ajax({
+            url: '<?= $block->escapeUrl($block->getAjaxUrl()) ?>',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                gateway_url: gatewayUrl,
+                merchant_id: merchantId,
+                form_key: FORM_KEY
+            },
+            success: function(response) {
+                button.prop('disabled', false);
+                
+                if (response.success) {
+                    resultContainer.html(
+                        '<span style="color: green; font-weight: bold;">✓ ' + 
+                        $t('Connection successful!') + 
+                        '</span><br/><span style="color: #666; font-size: 0.9em;">' + 
+                        response.message + 
+                        '</span>'
+                    );
+                } else {
+                    resultContainer.html(
+                        '<span style="color: red; font-weight: bold;">✗ ' + 
+                        $t('Connection failed!') + 
+                        '</span><br/><span style="color: #666; font-size: 0.9em;">' + 
+                        response.message + 
+                        '</span>'
+                    );
+                }
+            },
+            error: function(xhr, status, error) {
+                button.prop('disabled', false);
+                resultContainer.html(
+                    '<span style="color: red; font-weight: bold;">✗ ' + 
+                    $t('Connection test failed!') + 
+                    '</span><br/><span style="color: #666; font-size: 0.9em;">' + 
+                    $t('Error: ') + error + 
+                    '</span>'
+                );
+            }
+        });
+    };
+});
+</script>

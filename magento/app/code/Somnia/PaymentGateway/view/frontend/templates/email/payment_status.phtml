@@ -1,0 +1,70 @@
+<?php
+/**
+ * Copyright © Somnia. All rights reserved.
+ * Payment Status Template for Order Emails
+ *
+ * @var $block \Somnia\PaymentGateway\Block\Email\PaymentInfo
+ */
+
+// Only show for Somnia payment method
+$order = $block->getOrder();
+if (!$order || $order->getPayment()->getMethod() !== \Somnia\PaymentGateway\Model\Payment::CODE) {
+    return;
+}
+?>
+
+<?php if ($block->isPaymentPending()): ?>
+    <!-- Payment Pending Note -->
+    <table class="payment-pending-note" style="margin: 20px 0; border: 2px solid #ffc107; background-color: #fff9e6; width: 100%;">
+        <tr>
+            <td style="padding: 15px;">
+                <h3 style="margin-top: 0; color: #856404;"><?= $block->escapeHtml(__('Payment Pending')) ?></h3>
+                <p><?= $block->escapeHtml(__('Your order is awaiting cryptocurrency payment confirmation.')) ?></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><?= $block->escapeHtml(__('Payment Method: %1', $block->getPaymentMethodTitle())) ?></li>
+                    <li><?= $block->escapeHtml(__('Payment must be completed within %1 minutes', $block->getPaymentTimeout())) ?></li>
+                    <li><?= $block->escapeHtml(__('You will receive a confirmation email once payment is verified')) ?></li>
+                    <li><?= $block->escapeHtml(__('Payment confirmation may take a few minutes due to blockchain processing')) ?></li>
+                </ul>
+                <?php if ($block->getPaymentUrl()): ?>
+                <p style="text-align: center; margin: 15px 0;">
+                    <a href="<?= $block->escapeUrl($block->getPaymentUrl()) ?>" 
+                       style="background-color: #1979c3; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 3px; display: inline-block;">
+                        <?= $block->escapeHtml(__('Complete Payment')) ?>
+                    </a>
+                </p>
+                <?php endif; ?>
+                <p style="margin-bottom: 0;"><strong><?= $block->escapeHtml(__('Please do not close your browser until payment is complete.')) ?></strong></p>
+            </td>
+        </tr>
+    </table>
+<?php elseif ($block->isPaymentConfirmed()): ?>
+    <!-- Payment Confirmed Note -->
+    <table class="payment-confirmed-note" style="margin: 20px 0; border: 2px solid #28a745; background-color: #e8f5e9; width: 100%;">
+        <tr>
+            <td style="padding: 15px;">
+                <h3 style="margin-top: 0; color: #155724;"><?= $block->escapeHtml(__('Payment Confirmed')) ?></h3>
+                <p><?= $block->escapeHtml(__('Your cryptocurrency payment has been successfully confirmed!')) ?></p>
+                <table class="payment-details" style="width: 100%; margin: 10px 0;">
+                    <?php if ($block->getPaymentId()): ?>
+                    <tr>
+                        <td style="padding: 5px 0;"><strong><?= $block->escapeHtml(__('Payment ID:')) ?></strong></td>
+                        <td style="padding: 5px 0;"><?= $block->escapeHtml($block->getPaymentId()) ?></td>
+                    </tr>
+                    <?php endif; ?>
+                    <tr>
+                        <td style="padding: 5px 0;"><strong><?= $block->escapeHtml(__('Cryptocurrency:')) ?></strong></td>
+                        <td style="padding: 5px 0;"><?= $block->escapeHtml($block->getCryptoSymbol()) ?></td>
+                    </tr>
+                    <?php if ($block->getCryptoAmount()): ?>
+                    <tr>
+                        <td style="padding: 5px 0;"><strong><?= $block->escapeHtml(__('Amount Paid:')) ?></strong></td>
+                        <td style="padding: 5px 0;"><?= $block->escapeHtml($block->getCryptoAmount() . ' ' . $block->getCryptoSymbol()) ?></td>
+                    </tr>
+                    <?php endif; ?>
+                </table>
+                <p style="margin-bottom: 0;"><?= $block->escapeHtml(__('Your order is now being processed and will be shipped soon.')) ?></p>
+            </td>
+        </tr>
+    </table>
+<?php endif; ?>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Somnia Payment Gateway - Frontend Routes Configuration
+ *
+ * @category    Somnia
+ * @package     Somnia_PaymentGateway
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="standard">
+        <route id="somnia_gateway" frontName="somnia_gateway">
+            <module name="Somnia_PaymentGateway" />
+        </route>
+    </router>
+</config>

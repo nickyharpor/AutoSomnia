@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Somnia. All rights reserved.
+ * Email Templates Configuration
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
+    <template id="somnia_payment_instructions" label="Somnia Payment Instructions" file="payment_instructions.html" type="html" module="Somnia_PaymentGateway" area="frontend"/>
+    <template id="somnia_payment_pending" label="Somnia Payment Pending Note" file="payment_pending.html" type="html" module="Somnia_PaymentGateway" area="frontend"/>
+    <template id="somnia_payment_confirmed" label="Somnia Payment Confirmed Note" file="payment_confirmed.html" type="html" module="Somnia_PaymentGateway" area="frontend"/>
+</config>

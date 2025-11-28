@@ -1,0 +1,37 @@
+{
+    "name": "somnia/magento2-payment-gateway",
+    "description": "Somnia Cryptocurrency Payment Gateway for Magento 2",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Somnia Team",
+            "email": "support@somnia.network"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0|^8.1",
+        "magento/framework": "^102.0|^103.0",
+        "magento/module-payment": "^100.3",
+        "magento/module-checkout": "^100.3",
+        "magento/module-sales": "^102.0|^103.0",
+        "magento/module-config": "^101.1|^101.2"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Somnia\\PaymentGateway\\": ""
+        }
+    },
+    "keywords": [
+        "magento2",
+        "payment",
+        "gateway",
+        "cryptocurrency",
+        "somnia",
+        "somi"
+    ]
+}

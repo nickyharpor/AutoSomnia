@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Somnia. All rights reserved.
+ * Layout for order email items - adds payment information
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="order_totals">
+            <block class="Somnia\PaymentGateway\Block\Email\PaymentInfo" name="somnia.payment.info" template="Somnia_PaymentGateway::email/payment_status.phtml" after="-"/>
+        </referenceBlock>
+    </body>
+</page>

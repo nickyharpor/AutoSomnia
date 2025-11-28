@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import Optional
 
 from app.core.mongodb import MongoDBManager
-from app.models.user_models import UserResponse, UserCreateRequest, UserUpdateRequest
+from app.models.user_models import UserInfoResponse, UserCreateRequest, UserUpdateRequest
+from app.utils.auth_utils import generate_api_key
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -21,7 +22,7 @@ def get_db(request: Request) -> MongoDBManager:
 
 # ==================== User Management Endpoints ====================
 
-@router.post("/create", response_model=UserResponse)
+@router.post("/create", response_model=UserInfoResponse)
 async def create_user(
     request: UserCreateRequest,
     db: MongoDBManager = Depends(get_db)
@@ -36,18 +37,28 @@ async def create_user(
         # Create user document
         user_data = {
             "user_id": request.user_id,
+            "first_name": request.first_name,
+            "last_name": request.last_name,
+            "username": request.username,
+            "photo_url": request.photo_url,
+            "api_key": generate_api_key(),
             "auto_exchange": request.auto_exchange
         }
         
         # Insert user
-        user_id = db.insert_one("users", user_data)
+        user_id = db.insert_one("user", user_data)
         
         # Retrieve created user
-        created_user = db.find_one("users", {"_id": user_id})
+        created_user = db.find_one("user", {"_id": user_id})
         
-        return UserResponse(
+        return UserInfoResponse(
             user_id=created_user["user_id"],
             auto_exchange=created_user["auto_exchange"],
+            first_name=created_user["first_name"],
+            last_name=created_user["last_name"],
+            username=created_user["username"],
+            photo_url=created_user["photo_url"],
+            api_key=created_user["api_key"],
             created_at=created_user["created_at"],
             updated_at=created_user["updated_at"]
         )
@@ -58,21 +69,26 @@ async def create_user(
         raise HTTPException(status_code=500, detail=f"Error creating user: {str(e)}")
 
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=UserInfoResponse)
 async def get_user(
     user_id: int,
     db: MongoDBManager = Depends(get_db)
 ):
     """Get user by ID."""
     try:
-        user = db.find_one("users", {"user_id": user_id})
+        user = db.find_one("user", {"user_id": user_id})
         
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        return UserResponse(
+        return UserInfoResponse(
             user_id=user["user_id"],
             auto_exchange=user["auto_exchange"],
+            first_name=user["first_name"],
+            last_name=user["last_name"],
+            username=user["username"],
+            photo_url=user["photo_url"],
+            api_key=user["api_key"],
             created_at=user["created_at"],
             updated_at=user["updated_at"]
         )
@@ -83,7 +99,7 @@ async def get_user(
         raise HTTPException(status_code=500, detail=f"Error retrieving user: {str(e)}")
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=UserInfoResponse)
 async def update_user(
     user_id: int,
     request: UserUpdateRequest,
@@ -92,7 +108,7 @@ async def update_user(
     """Update user settings."""
     try:
         # Check if user exists
-        existing_user = db.find_one("users", {"user_id": user_id})
+        existing_user = db.find_one("user", {"user_id": user_id})
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -106,16 +122,21 @@ async def update_user(
             raise HTTPException(status_code=400, detail="No fields to update")
         
         # Update user
-        result = db.update_one("users", {"user_id": user_id}, update_data)
+        result = db.update_one("user", {"user_id": user_id}, update_data)
         
         if result["modified_count"] == 0:
             raise HTTPException(status_code=400, detail="No changes made")
         
         # Return updated user
-        updated_user = db.find_one("users", {"user_id": user_id})
+        updated_user = db.find_one("user", {"user_id": user_id})
         
-        return UserResponse(
+        return UserInfoResponse(
             user_id=updated_user["user_id"],
+            first_name=updated_user["first_name"],
+            last_name=updated_user["last_name"],
+            username=updated_user["username"],
+            photo_url=updated_user["photo_url"],
+            api_key=updated_user["api_key"],
             auto_exchange=updated_user["auto_exchange"],
             created_at=updated_user["created_at"],
             updated_at=updated_user["updated_at"]
@@ -134,7 +155,7 @@ async def delete_user(
 ):
     """Delete a user."""
     try:
-        deleted_count = db.delete_one("users", {"user_id": user_id})
+        deleted_count = db.delete_one("user", {"user_id": user_id})
         
         if deleted_count == 0:
             raise HTTPException(status_code=404, detail="User not found")
@@ -163,14 +184,14 @@ async def list_users(
         
         # Get users
         users = db.find_many(
-            "users",
+            "user",
             filter_dict=filter_dict,
             sort=("created_at", -1),
             limit=limit,
             skip=skip
         )
         
-        total_count = db.count_documents("users", filter_dict)
+        total_count = db.count_documents("user", filter_dict)
         
         return {
             "users": users,
@@ -194,7 +215,7 @@ async def enable_auto_exchange(
     """Enable auto-exchange for a user."""
     try:
         result = db.update_one(
-            "users",
+            "user",
             {"user_id": user_id},
             {"$set": {"auto_exchange": True}},
             upsert=True
@@ -218,7 +239,7 @@ async def disable_auto_exchange(
     """Disable auto-exchange for a user."""
     try:
         result = db.update_one(
-            "users",
+            "user",
             {"user_id": user_id},
             {"$set": {"auto_exchange": False}},
             upsert=True
@@ -241,7 +262,7 @@ async def get_auto_exchange_status(
 ):
     """Get auto-exchange status for a user."""
     try:
-        user = db.find_one("users", {"user_id": user_id})
+        user = db.find_one("user", {"user_id": user_id})
         
         if not user:
             # Return default status for non-existent users
