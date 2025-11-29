@@ -1,0 +1,18 @@
+.telegram-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.telegram-login-widget {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Override Telegram widget styles if needed */
+.telegram-login-widget iframe {
+  border: none;
+  border-radius: 8px;
+}

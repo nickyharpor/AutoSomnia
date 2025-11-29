@@ -11,9 +11,9 @@ private
 
 
 # Node / React UI
-ui/node_modules/
-ui/dist/
-ui/dist-ssr/
+ui/node_modules
+ui/dist
+ui/dist-ssr
 ui/.env
 ui/.env.local
 ui/.env.production

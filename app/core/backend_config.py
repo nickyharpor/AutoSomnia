@@ -27,6 +27,9 @@ class Settings(BaseSettings):
 
     # AI
     GEMINI_API_KEY: str = ''
+    AWS_ACCESS_KEY_ID: str = ''
+    AWS_SECRET_ACCESS_KEY: str = ''
+    AWS_REGION: str = ''
 
     # Authentication
     JWT_SECRET_KEY: str = 'your-super-secret-jwt-key-change-this-in-production'

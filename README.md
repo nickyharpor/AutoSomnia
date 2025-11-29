@@ -15,6 +15,8 @@
 
 AutoSomnia is a comprehensive Web3 trading automation platform that combines AI-powered market analysis with seamless account management. Built for the Somnia blockchain ecosystem, it provides users with intelligent trading suggestions and automated portfolio management through an intuitive Telegram bot interface.
 
+[![Dashboard](/static/dashboard.jpg)](/static/dashboard.jpg)
+
 ## 🤖 Telegram Bot
 
 https://t.me/autosomnia_bot
@@ -31,6 +33,7 @@ https://gamma.app/docs/AutoSomnia-x3lbsffz3yuwgkn
 - **📊 Real-time Market Data**: Integration with CoinGecko API for live price feeds
 - **🔐 Secure Storage**: MongoDB-based account management with encrypted private keys
 - **📱 Telegram Interface**: User-friendly bot commands for all operations
+- **🌐 Web Interface**: Web panel for more advanced portfolio management
 
 ---
 
@@ -43,12 +46,11 @@ https://gamma.app/docs/AutoSomnia-x3lbsffz3yuwgkn
 │ • User Commands │    │ • REST API      │    │ • Somnia         │
 │ • AI Responses  │    │ • Account Mgmt  │    │ • EVM Chains     │
 │ • Notifications │    │ • Transactions  │    │ • Smart Contracts│
-└─────────────────┘    │                 │    └──────────────────┘
-                       │                 │              │
-┌─────────────────┐    │                 │              │
-│    Web UI       │────│                 │              │
-│    (soon)       │    └─────────────────┘              │
-│                 │             │                       │
+└─────────────────┘    │ • Gateway       │    └──────────────────┘
+                       │ • AI Settings   │              │
+┌─────────────────┐    │ • Data Export   │              │
+│    Web UI       │────│ • Tasks         │              │
+│                 │    └─────────────────┘              │
 │ • Dashboard     │             │                       │
 │ • Portfolio     │    ┌─────────────────┐              │
 │ • Trading       │    │    Database     │              │
@@ -72,7 +74,7 @@ https://gamma.app/docs/AutoSomnia-x3lbsffz3yuwgkn
 - **Pydantic** - Data validation and serialization
 
 **AI & External APIs:**
-- **Google Gemini AI** - Advanced language model for trading analysis
+- **Amazon Bedrock AI** - Advanced language models for trading analysis
 - **CoinGecko API** - Real-time cryptocurrency market data
 - **Telegram Bot API** - User interface and notifications
 
@@ -116,7 +118,7 @@ https://gamma.app/docs/AutoSomnia-x3lbsffz3yuwgkn
 - Python 3.9+
 - MongoDB instance
 - Telegram Bot Token
-- Google Gemini API Key
+- AWS Access Key and Secret for Amazon Bedrock
 - CoinGecko API Key
 
 ### 1. Clone the Repository
