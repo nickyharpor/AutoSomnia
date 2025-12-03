@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import Card from '../components/common/Card'
 import Table from '../components/common/Table'
@@ -8,6 +9,9 @@ import accountService from '../services/accountService'
 import './Portfolio.css'
 
 const Portfolio = () => {
+  const { t } = useTranslation('pages')
+  const { t: tCommon } = useTranslation('common')
+  const { t: tErrors } = useTranslation('errors')
   const { user } = useAuth()
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -30,7 +34,7 @@ const Portfolio = () => {
       setAccounts(data.accounts || [])
     } catch (err) {
       console.error('Error fetching accounts:', err)
-      setError(err.response?.data?.detail || 'Failed to load accounts')
+      setError(err.response?.data?.detail || tErrors('account.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -62,7 +66,7 @@ const Portfolio = () => {
       
     } catch (err) {
       console.error('Error creating account:', err)
-      setError(err.response?.data?.detail || 'Failed to create account')
+      setError(err.response?.data?.detail || tErrors('account.createFailed'))
     } finally {
       setCreating(false)
     }
@@ -114,7 +118,7 @@ const Portfolio = () => {
   const columns = [
     {
       key: 'address',
-      label: 'Address',
+      label: t('portfolio.columns.address'),
       render: (value) => (
         <span className="address-cell" title={value}>
           {value.slice(0, 10)}...{value.slice(-8)}
@@ -123,16 +127,16 @@ const Portfolio = () => {
     },
     {
       key: 'is_imported',
-      label: 'Type',
+      label: t('portfolio.columns.type'),
       render: (value) => (
         <span className={`type-badge ${value ? 'imported' : 'created'}`}>
-          {value ? 'Imported' : 'Created'}
+          {value ? t('portfolio.type.imported') : t('portfolio.type.created')}
         </span>
       )
     },
     {
       key: 'created_at',
-      label: 'Created',
+      label: t('portfolio.columns.created'),
       render: (value) => {
         if (!value) return 'N/A'
         const date = new Date(value)
@@ -141,7 +145,7 @@ const Portfolio = () => {
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('portfolio.columns.actions'),
       render: (value, row) => (
         <div className="action-buttons">
           <div className="copy-button-container">
@@ -149,10 +153,10 @@ const Portfolio = () => {
               size="small"
               onClick={() => handleCopyAddress(row.address)}
             >
-              Copy Address
+              {t('portfolio.copyAddress')}
             </Button>
             {copiedAddress === row.address && (
-              <span className="copied-notification">Address copied to clipboard!</span>
+              <span className="copied-notification">{t('portfolio.addressCopied')}</span>
             )}
           </div>
         </div>
@@ -164,25 +168,25 @@ const Portfolio = () => {
     <div className="portfolio-page">
       <div className="page-header">
         <div>
-          <h1>Portfolio</h1>
-          <p className="page-subtitle">Manage your accounts</p>
+          <h1>{t('portfolio.title')}</h1>
+          <p className="page-subtitle">{t('portfolio.subtitle')}</p>
         </div>
         <Button onClick={handleAddAccountClick} disabled={creating}>
-          {creating ? 'Creating...' : 'Add Account'}
+          {creating ? t('portfolio.creating') : t('portfolio.addAccount')}
         </Button>
       </div>
 
       {showConfirmDialog && (
         <div className="confirm-dialog-overlay">
           <div className="confirm-dialog">
-            <h3>Confirm Account Creation</h3>
-            <p>Are you sure you want to add a new account?</p>
+            <h3>{t('portfolio.confirmTitle')}</h3>
+            <p>{t('portfolio.confirmMessage')}</p>
             <div className="confirm-dialog-buttons">
               <Button onClick={handleConfirmAddAccount} disabled={creating}>
-                Yes
+                {tCommon('actions.yes')}
               </Button>
               <Button onClick={handleCancelAddAccount} variant="secondary">
-                No
+                {tCommon('actions.no')}
               </Button>
             </div>
           </div>
@@ -199,28 +203,28 @@ const Portfolio = () => {
       <Card>
         {loading ? (
           <div className="loading-state">
-            <p>Loading accounts...</p>
+            <p>{t('portfolio.loadingAccounts')}</p>
           </div>
         ) : accounts.length > 0 ? (
           <>
             <div className="accounts-summary">
               <p className="account-count">
-                {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+                {t('portfolio.accountCount', { count: accounts.length })}
               </p>
             </div>
             <Table columns={columns} data={accounts} />
           </>
         ) : (
           <div className="empty-state">
-            <p>No accounts found</p>
-            <p className="empty-hint">Click "Add Account" to create your first account</p>
+            <p>{t('portfolio.noAccounts')}</p>
+            <p className="empty-hint">{t('portfolio.noAccountsHint')}</p>
           </div>
         )}
       </Card>
 
       {/* Charts Section */}
       <div className="portfolio-charts">
-        <Card title="Token Distribution">
+        <Card title={t('portfolio.tokenDistribution')}>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
@@ -256,7 +260,7 @@ const Portfolio = () => {
                   itemStyle={{
                     color: '#1a202c'
                   }}
-                  formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
+                  formatter={(value) => [`$${value.toLocaleString()}`, t('portfolio.chartValue')]}
                 />
                 <Legend
                   verticalAlign="bottom"
@@ -272,14 +276,14 @@ const Portfolio = () => {
             
             <div className="token-summary">
               <div className="total-value">
-                <span className="label">Total Portfolio Value</span>
+                <span className="label">{t('portfolio.totalPortfolioValue')}</span>
                 <span className="value">${totalValue.toLocaleString()}</span>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card title="Distribution over Addresses">
+        <Card title={t('portfolio.addressDistribution')}>
           <div className="chart-container">
             {addressDistribution.length > 0 ? (
               <>
@@ -336,15 +340,15 @@ const Portfolio = () => {
                 
                 <div className="token-summary">
                   <div className="total-value">
-                    <span className="label">Total Balance Across Addresses</span>
+                    <span className="label">{t('portfolio.totalBalanceAcrossAddresses')}</span>
                     <span className="value">${totalAddressValue.toLocaleString()}</span>
                   </div>
                 </div>
               </>
             ) : (
               <div className="empty-chart-state">
-                <p>No accounts to display</p>
-                <p className="empty-hint">Add an account to see distribution</p>
+                <p>{t('portfolio.noAccountsToDisplay')}</p>
+                <p className="empty-hint">{t('portfolio.addAccountToSeeDistribution')}</p>
               </div>
             )}
           </div>

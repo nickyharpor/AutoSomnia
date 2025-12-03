@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import './Settings.css'
 
 const Settings = () => {
+  const { t } = useTranslation('pages')
   const [selectedStrategy, setSelectedStrategy] = useState('conservative')
   const [applying, setApplying] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -13,33 +15,33 @@ const Settings = () => {
   const strategies = [
     { 
       id: 'conservative', 
-      name: 'Conservative', 
-      description: 'Low risk, steady gains with minimal volatility exposure'
+      name: t('settings.aiStrategy.strategies.conservative.name'),
+      description: t('settings.aiStrategy.strategies.conservative.description')
     },
     { 
       id: 'balanced', 
-      name: 'Balanced', 
-      description: 'Moderate risk with balanced approach to growth and stability'
+      name: t('settings.aiStrategy.strategies.balanced.name'),
+      description: t('settings.aiStrategy.strategies.balanced.description')
     },
     { 
       id: 'aggressive', 
-      name: 'Aggressive', 
-      description: 'High risk, high reward strategy for maximum profit potential'
+      name: t('settings.aiStrategy.strategies.aggressive.name'),
+      description: t('settings.aiStrategy.strategies.aggressive.description')
     },
     { 
       id: 'scalping', 
-      name: 'Scalping', 
-      description: 'Quick trades with small profits, high frequency trading'
+      name: t('settings.aiStrategy.strategies.scalping.name'),
+      description: t('settings.aiStrategy.strategies.scalping.description')
     },
     { 
       id: 'swing', 
-      name: 'Swing Trading', 
-      description: 'Medium-term trades capturing price swings over days or weeks'
+      name: t('settings.aiStrategy.strategies.swing.name'),
+      description: t('settings.aiStrategy.strategies.swing.description')
     },
     { 
       id: 'arbitrage', 
-      name: 'Arbitrage', 
-      description: 'Exploit price differences across different exchanges'
+      name: t('settings.aiStrategy.strategies.arbitrage.name'),
+      description: t('settings.aiStrategy.strategies.arbitrage.description')
     }
   ]
 
@@ -51,7 +53,7 @@ const Settings = () => {
     setTimeout(() => {
       setApplying(false)
       const strategyName = strategies.find(s => s.id === selectedStrategy)?.name
-      setSuccessMessage(`${strategyName} strategy applied successfully!`)
+      setSuccessMessage(t('settings.aiStrategy.successMessage', { strategy: strategyName }))
       
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -67,7 +69,7 @@ const Settings = () => {
     // Simulate export process
     setTimeout(() => {
       setExporting(false)
-      setExportMessage(`Account data exported successfully as ${format.toUpperCase()}!`)
+      setExportMessage(t('settings.exportData.successMessage', { format: format.toUpperCase() }))
       
       // Clear export message after 3 seconds
       setTimeout(() => {
@@ -79,13 +81,13 @@ const Settings = () => {
   return (
     <div className="settings-page">
       <div className="page-header">
-        <h1>Settings</h1>
+        <h1>{t('settings.title')}</h1>
       </div>
       
       <div className="settings-grid">
-        <Card title="AI Strategy">
+        <Card title={t('settings.aiStrategy.title')}>
           <div className="setting-item">
-            <label>Select Trading Strategy</label>
+            <label>{t('settings.aiStrategy.label')}</label>
             <select 
               value={selectedStrategy} 
               onChange={(e) => setSelectedStrategy(e.target.value)}
@@ -107,15 +109,15 @@ const Settings = () => {
             </div>
           )}
           <Button onClick={handleApplyStrategy} disabled={applying}>
-            {applying ? 'Applying...' : 'Apply Strategy'}
+            {applying ? t('settings.aiStrategy.applying') : t('settings.aiStrategy.applyStrategy')}
           </Button>
         </Card>
 
-        <Card title="Export Data">
+        <Card title={t('settings.exportData.title')}>
           <div className="setting-item">
-            <label>Export your account data</label>
+            <label>{t('settings.exportData.label')}</label>
             <p className="export-description">
-              Download your trading history, account balances, and transaction records in your preferred format.
+              {t('settings.exportData.description')}
             </p>
           </div>
           {exportMessage && (
@@ -129,14 +131,14 @@ const Settings = () => {
               disabled={exporting}
               variant="secondary"
             >
-              {exporting ? 'Exporting...' : 'Export as JSON'}
+              {exporting ? t('settings.exportData.exporting') : t('settings.exportData.exportJson')}
             </Button>
             <Button 
               onClick={() => handleExport('csv')} 
               disabled={exporting}
               variant="secondary"
             >
-              {exporting ? 'Exporting...' : 'Export as CSV'}
+              {exporting ? t('settings.exportData.exporting') : t('settings.exportData.exportCsv')}
             </Button>
           </div>
         </Card>

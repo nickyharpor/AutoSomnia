@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import Card from '../components/common/Card'
 import Table from '../components/common/Table'
@@ -6,6 +7,7 @@ import accountService from '../services/accountService'
 import './Analytics.css'
 
 const Analytics = () => {
+  const { t } = useTranslation('pages')
   const { user } = useAuth()
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -79,7 +81,7 @@ const Analytics = () => {
   const columns = [
     {
       key: 'address',
-      label: 'Address',
+      label: t('analytics.columns.address'),
       render: (value) => (
         <div className="address-cell-wrapper">
           <span className="address-cell" title={value}>
@@ -92,9 +94,9 @@ const Analytics = () => {
             >
               📋
             </button>
-            <span className="copy-tooltip">Copy address</span>
+            <span className="copy-tooltip">{t('analytics.copyAddress')}</span>
             {copiedAddress === value && (
-              <span className="copied-message">Address copied!</span>
+              <span className="copied-message">{t('analytics.addressCopied')}</span>
             )}
           </div>
         </div>
@@ -102,27 +104,27 @@ const Analytics = () => {
     },
     {
       key: 'balance',
-      label: 'Balance (SOMI)',
+      label: t('analytics.columns.balance'),
       render: (value) => (
         <span className="balance-cell">
-          {parseFloat(value).toFixed(6)} SOMI
+          {parseFloat(value).toFixed(6)} {t('analytics.balanceCurrency')}
         </span>
       )
     },
     {
       key: 'is_imported',
-      label: 'Type',
+      label: t('analytics.columns.type'),
       render: (value) => (
         <span className={`type-badge ${value ? 'imported' : 'created'}`}>
-          {value ? 'Imported' : 'Created'}
+          {value ? t('analytics.type.imported') : t('analytics.type.created')}
         </span>
       )
     },
     {
       key: 'created_at',
-      label: 'Created',
+      label: t('analytics.columns.created'),
       render: (value) => {
-        if (!value) return 'N/A'
+        if (!value) return t('analytics.notAvailable')
         const date = new Date(value)
         return date.toLocaleDateString()
       }
@@ -132,38 +134,38 @@ const Analytics = () => {
   return (
     <div className="analytics-page">
       <div className="page-header">
-        <h1>Account Analytics</h1>
-        <p className="page-subtitle">View your accounts and balances</p>
+        <h1>{t('analytics.title')}</h1>
+        <p className="page-subtitle">{t('analytics.subtitle')}</p>
       </div>
 
       <div className="analytics-summary">
-        <Card title="Total Balance">
+        <Card title={t('analytics.totalBalance')}>
           <div className="total-balance">
             <span className="balance-amount">{totalBalance}</span>
-            <span className="balance-currency">SOMI</span>
+            <span className="balance-currency">{t('analytics.balanceCurrency')}</span>
           </div>
           <div className="balance-info">
-            <span className="account-count">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</span>
+            <span className="account-count">{t('analytics.accountCount', { count: accounts.length })}</span>
           </div>
         </Card>
       </div>
 
-      <Card title="Your Accounts">
+      <Card title={t('analytics.yourAccounts')}>
         {loading ? (
           <div className="loading-state">
-            <p>Loading accounts...</p>
+            <p>{t('analytics.loadingAccounts')}</p>
           </div>
         ) : error ? (
           <div className="error-state">
             <p className="error-message">{error}</p>
             <button onClick={fetchAccountsWithBalances} className="retry-button">
-              Retry
+              {t('analytics.retry')}
             </button>
           </div>
         ) : accounts.length === 0 ? (
           <div className="empty-state">
-            <p>No accounts found</p>
-            <p className="empty-hint">Create an account to get started</p>
+            <p>{t('analytics.noAccounts')}</p>
+            <p className="empty-hint">{t('analytics.noAccountsHint')}</p>
           </div>
         ) : (
           <Table columns={columns} data={accounts} />

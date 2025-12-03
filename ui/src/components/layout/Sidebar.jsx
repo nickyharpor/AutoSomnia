@@ -6,22 +6,25 @@ import {
   BarChart3, 
   Settings 
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import './Sidebar.css'
 
 const Sidebar = () => {
+  const { t } = useTranslation('common')
+  
   const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/portfolio', icon: Wallet, label: 'Portfolio' },
-    { path: '/trades', icon: TrendingUp, label: 'Trades' },
-    { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/', icon: LayoutDashboard, label: t('navigation.dashboard') },
+    { path: '/portfolio', icon: Wallet, label: t('navigation.portfolio') },
+    { path: '/trades', icon: TrendingUp, label: t('navigation.trades') },
+    { path: '/analytics', icon: BarChart3, label: t('navigation.analytics') },
+    { path: '/settings', icon: Settings, label: t('navigation.settings') },
   ]
 
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1 className="sidebar-title">AutoSomnia</h1>
-        <p className="sidebar-subtitle">AI Trading</p>
+        <h1 className="sidebar-title">{t('app.name')}</h1>
+        <p className="sidebar-subtitle">{t('app.tagline')}</p>
       </div>
       
       <nav className="sidebar-nav">

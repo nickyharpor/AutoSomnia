@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './TelegramLoginButton.css'
 
 const TelegramLoginButton = ({ botName, buttonSize = 'large', requestAccess = 'write' }) => {
   const containerRef = useRef(null)
   const { login } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation('errors')
 
   useEffect(() => {
     // Define the callback function globally
@@ -21,7 +23,7 @@ const TelegramLoginButton = ({ botName, buttonSize = 'large', requestAccess = 'w
         navigate('/')
       } else {
         console.error('Login failed:', result.error)
-        alert(`Login failed: ${result.error}`)
+        alert(t('auth.loginFailed', { error: result.error }))
       }
     }
 

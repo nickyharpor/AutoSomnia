@@ -1,4 +1,5 @@
 import api from './api'
+import i18n from '../i18n'
 
 /**
  * Verify and authenticate Telegram user data
@@ -10,7 +11,8 @@ export const authenticateWithTelegram = async (telegramData) => {
     const response = await api.post('/auth/telegram', telegramData)
     return response.data
   } catch (error) {
-    throw error
+    const message = error.response?.data?.message || i18n.t('errors:auth.loginFailed')
+    throw new Error(message)
   }
 }
 
@@ -22,7 +24,9 @@ export const logout = async () => {
   try {
     await api.post('/auth/logout')
   } catch (error) {
-    console.error('Logout error:', error)
+    const message = error.response?.data?.message || i18n.t('errors:auth.logoutFailed')
+    console.error('Logout error:', message)
+    throw new Error(message)
   }
 }
 
@@ -35,7 +39,8 @@ export const verifyToken = async () => {
     const response = await api.get('/auth/verify')
     return response.data
   } catch (error) {
-    throw error
+    const message = error.response?.data?.message || i18n.t('errors:auth.verifyFailed')
+    throw new Error(message)
   }
 }
 

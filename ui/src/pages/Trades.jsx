@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { X, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react'
 import Card from '../components/common/Card'
@@ -6,6 +7,8 @@ import Button from '../components/common/Button'
 import './Trades.css'
 
 const Trades = () => {
+  const { t } = useTranslation('pages')
+  const { t: tCommon } = useTranslation('common')
   const [timeframe, setTimeframe] = useState('week')
   const [selectedTrade, setSelectedTrade] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -79,10 +82,10 @@ const Trades = () => {
   const chartData = useMemo(() => generateSampleData(timeframe), [timeframe])
 
   const timeframeOptions = [
-    { value: 'week', label: 'Last Week' },
-    { value: 'month', label: 'Last Month' },
-    { value: '3months', label: 'Last 3 Months' },
-    { value: 'year', label: 'Last Year' }
+    { value: 'week', label: t('trades.timeframe.lastWeek') },
+    { value: 'month', label: t('trades.timeframe.lastMonth') },
+    { value: '3months', label: t('trades.timeframe.last3Months') },
+    { value: 'year', label: t('trades.timeframe.lastYear') }
   ]
 
   // Sample trades data
@@ -187,11 +190,11 @@ const Trades = () => {
   return (
     <div className="trades-page">
       <div className="page-header">
-        <h1>Trade History</h1>
+        <h1>{t('trades.title')}</h1>
       </div>
 
       {/* Trade Volume Chart */}
-      <Card title="Trade Volume">
+      <Card title={t('trades.tradeVolume')}>
         <div className="chart-controls">
           <div className="timeframe-selector">
             {timeframeOptions.map((option) => (
@@ -218,7 +221,7 @@ const Trades = () => {
               <YAxis 
                 stroke="var(--text-secondary)"
                 style={{ fontSize: '0.875rem' }}
-                tickFormatter={(value) => `$${value.toLocaleString()}`}
+                tickFormatter={(value) => `${value.toLocaleString()}`}
               />
               <Tooltip 
                 contentStyle={{
@@ -237,7 +240,7 @@ const Trades = () => {
                 itemStyle={{
                   color: '#ffffff'
                 }}
-                formatter={(value) => [`$${value.toLocaleString()}`, 'Trade Volume']}
+                formatter={(value) => [`${value.toLocaleString()}`, t('trades.tradeVolume')]}
                 cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
               />
               <Legend 
@@ -246,7 +249,7 @@ const Trades = () => {
               <Bar 
                 dataKey="amount" 
                 fill="#667eea" 
-                name="Trade Volume (USD)"
+                name={t('trades.columns.usdValue')}
                 radius={[8, 8, 0, 0]}
               />
             </BarChart>
@@ -255,27 +258,27 @@ const Trades = () => {
       </Card>
 
       {/* Trade History Table */}
-      <Card title="Recent Trades">
+      <Card title={t('trades.recentTrades')}>
         <div className="trades-table-container">
           {/* Filters */}
           <div className="table-filters">
             <input
               type="text"
-              placeholder="Filter by Trade ID..."
+              placeholder={t('trades.filters.tradeId')}
               value={filters.tradeId}
               onChange={(e) => handleFilterChange('tradeId', e.target.value)}
               className="filter-input"
             />
             <input
               type="text"
-              placeholder="Filter by From Currency..."
+              placeholder={t('trades.filters.fromCurrency')}
               value={filters.fromCurrency}
               onChange={(e) => handleFilterChange('fromCurrency', e.target.value)}
               className="filter-input"
             />
             <input
               type="text"
-              placeholder="Filter by To Currency..."
+              placeholder={t('trades.filters.toCurrency')}
               value={filters.toCurrency}
               onChange={(e) => handleFilterChange('toCurrency', e.target.value)}
               className="filter-input"
@@ -289,35 +292,35 @@ const Trades = () => {
                 <tr>
                   <th onClick={() => handleSort('id')} className="sortable">
                     <div className="th-content">
-                      Trade ID
+                      {t('trades.columns.tradeId')}
                       <ArrowUpDown size={14} />
                     </div>
                   </th>
                   <th onClick={() => handleSort('fromCurrency')} className="sortable">
                     <div className="th-content">
-                      From
+                      {t('trades.columns.from')}
                       <ArrowUpDown size={14} />
                     </div>
                   </th>
                   <th onClick={() => handleSort('toCurrency')} className="sortable">
                     <div className="th-content">
-                      To
+                      {t('trades.columns.to')}
                       <ArrowUpDown size={14} />
                     </div>
                   </th>
                   <th onClick={() => handleSort('usdValue')} className="sortable">
                     <div className="th-content">
-                      USD Value
+                      {t('trades.columns.usdValue')}
                       <ArrowUpDown size={14} />
                     </div>
                   </th>
                   <th onClick={() => handleSort('date')} className="sortable">
                     <div className="th-content">
-                      Date & Time
+                      {t('trades.columns.dateTime')}
                       <ArrowUpDown size={14} />
                     </div>
                   </th>
-                  <th>Actions</th>
+                  <th>{t('trades.columns.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -343,7 +346,7 @@ const Trades = () => {
                       </td>
                       <td>
                         <Button size="small" onClick={() => handleViewTrade(trade)}>
-                          View Trade
+                          {t('trades.viewTrade')}
                         </Button>
                       </td>
                     </tr>
@@ -351,7 +354,7 @@ const Trades = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="empty-state">
-                      No trades found
+                      {t('trades.noTrades')}
                     </td>
                   </tr>
                 )}
@@ -368,11 +371,11 @@ const Trades = () => {
                 className="pagination-button"
               >
                 <ChevronLeft size={18} />
-                Previous
+                {t('trades.pagination.previous')}
               </button>
               
               <div className="pagination-info">
-                Page {currentPage} of {totalPages} ({sortedTrades.length} trades)
+                {t('trades.pagination.page', { current: currentPage, total: totalPages, count: sortedTrades.length })}
               </div>
               
               <button
@@ -380,7 +383,7 @@ const Trades = () => {
                 disabled={currentPage === totalPages}
                 className="pagination-button"
               >
-                Next
+                {t('trades.pagination.next')}
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -393,7 +396,7 @@ const Trades = () => {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Trade Details</h2>
+              <h2>{t('trades.modal.title')}</h2>
               <button onClick={closeModal} className="modal-close">
                 <X size={24} />
               </button>
@@ -401,33 +404,33 @@ const Trades = () => {
             
             <div className="modal-body">
               <div className="detail-row">
-                <span className="detail-label">Trade ID:</span>
+                <span className="detail-label">{t('trades.modal.tradeId')}</span>
                 <span className="detail-value">{selectedTrade.id}</span>
               </div>
               
               <div className="detail-row">
-                <span className="detail-label">Status:</span>
+                <span className="detail-label">{t('trades.modal.status')}</span>
                 <span className={`status-badge ${selectedTrade.status}`}>
-                  {selectedTrade.status === 'success' ? '✅ Success' : '❌ Failed'}
+                  {selectedTrade.status === 'success' ? t('trades.modal.statusSuccess') : t('trades.modal.statusFailed')}
                 </span>
               </div>
               
               <div className="detail-section">
-                <h3>Trade Information</h3>
+                <h3>{t('trades.modal.tradeInformation')}</h3>
                 <div className="detail-row">
-                  <span className="detail-label">From:</span>
+                  <span className="detail-label">{t('trades.modal.from')}</span>
                   <span className="detail-value">
                     {selectedTrade.fromAmount} {selectedTrade.fromCurrency}
                   </span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">To:</span>
+                  <span className="detail-label">{t('trades.modal.to')}</span>
                   <span className="detail-value">
                     {selectedTrade.toAmount} {selectedTrade.toCurrency}
                   </span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">USD Value:</span>
+                  <span className="detail-label">{t('trades.modal.usdValue')}</span>
                   <span className="detail-value">
                     ${parseFloat(selectedTrade.usdValue).toLocaleString()}
                   </span>
@@ -435,32 +438,32 @@ const Trades = () => {
               </div>
               
               <div className="detail-section">
-                <h3>Transaction Details</h3>
+                <h3>{t('trades.modal.transactionDetails')}</h3>
                 <div className="detail-row">
-                  <span className="detail-label">Date & Time:</span>
+                  <span className="detail-label">{t('trades.modal.dateTime')}</span>
                   <span className="detail-value">
                     {new Date(selectedTrade.date).toLocaleString()}
                   </span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Transaction Hash:</span>
+                  <span className="detail-label">{t('trades.modal.txHash')}</span>
                   <span className="detail-value hash">
                     {selectedTrade.txHash.slice(0, 10)}...{selectedTrade.txHash.slice(-8)}
                   </span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Gas Used:</span>
+                  <span className="detail-label">{t('trades.modal.gasUsed')}</span>
                   <span className="detail-value">{selectedTrade.gasUsed}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Gas Fee:</span>
+                  <span className="detail-label">{t('trades.modal.gasFee')}</span>
                   <span className="detail-value">{selectedTrade.gasFee} ETH</span>
                 </div>
               </div>
             </div>
             
             <div className="modal-footer">
-              <Button onClick={closeModal}>Close</Button>
+              <Button onClick={closeModal}>{tCommon('actions.close')}</Button>
             </div>
           </div>
         </div>

@@ -1,10 +1,13 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import TelegramLoginButton from '../components/auth/TelegramLoginButton'
 import './Login.css'
 
 const Login = () => {
+  const { t } = useTranslation('pages')
+  const { t: tCommon } = useTranslation('common')
   const { isAuthenticated, loading } = useAuth()
   const navigate = useNavigate()
 
@@ -18,7 +21,7 @@ const Login = () => {
     return (
       <div className="login-page">
         <div className="login-container">
-          <div className="loading">Loading...</div>
+          <div className="loading">{tCommon('status.loading')}</div>
         </div>
       </div>
     )
@@ -29,14 +32,14 @@ const Login = () => {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <h1>AutoSomnia</h1>
-            <p>Trading Bot Dashboard</p>
+            <h1>{t('login.title')}</h1>
+            <p>{t('login.subtitle')}</p>
           </div>
           
           <div className="login-content">
-            <h2>Welcome Back</h2>
+            <h2>{t('login.welcomeBack')}</h2>
             <p className="login-description">
-              Sign in with your Telegram account to access the dashboard
+              {t('login.description')}
             </p>
             
             <div className="login-widget">
@@ -49,7 +52,7 @@ const Login = () => {
             
             <div className="login-info">
               <p>
-                <strong>Note:</strong> You need to have a Telegram account to sign in.
+                <strong>{t('login.note')}</strong> {t('login.noteText')}
               </p>
             </div>
           </div>

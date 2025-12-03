@@ -8,8 +8,8 @@ class GeminiClient:
 
         # Configure proxy if needed
         if proxy:
-            os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:1080'
-            os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:1080'
+            os.environ['HTTP_PROXY'] = 'http://127.0.0.1:2080'
+            os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:2080'
 
         genai.configure(api_key=self.settings.GEMINI_API_KEY)
         self.model = genai.GenerativeModel('gemini-2.0-flash')

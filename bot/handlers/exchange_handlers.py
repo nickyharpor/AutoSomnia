@@ -29,7 +29,7 @@ async def suggest_exchange(event: events.NewMessage.Event):
         
         # Initialize clients
         coingecko_client = CoinGeckoClient()
-        gemini_client = GeminiClient()
+        gemini_client = GeminiClient(proxy=False)
         
         # Get price data from CoinGecko
         try:

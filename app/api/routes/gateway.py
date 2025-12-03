@@ -17,8 +17,6 @@ from app.models.gateway_models import (
 )
 from app.services.account_service import (
     AccountService,
-    delete_user_with_accounts,
-    validate_private_key as vpk,
     get_address_from_private_key
 )
 from app.core.backend_config import settings

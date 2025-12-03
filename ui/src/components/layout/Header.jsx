@@ -2,12 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { Bell, User, LogOut, Check, X } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import ThemeToggle from '../common/ThemeToggle'
 import './Header.css'
 
 const Header = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef(null)
 
@@ -108,7 +110,7 @@ const Header = () => {
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    if (minutes < 1) return 'Just now'
+    if (minutes < 1) return t('time.justNow')
     if (minutes < 60) return `${minutes}m ago`
     if (hours < 24) return `${hours}h ago`
     if (days < 7) return `${days}d ago`
@@ -136,7 +138,7 @@ const Header = () => {
     <header className="header">
       <div className="header-content">
         <div className="header-left">
-          <h2 className="page-title">Dashboard</h2>
+          <h2 className="page-title">{t('navigation.dashboard')}</h2>
         </div>
         
         <div className="header-right">
@@ -157,7 +159,7 @@ const Header = () => {
             <button 
               className="icon-button notification-button" 
               onClick={toggleNotifications}
-              title="Notifications"
+              title={t('components:header.notifications')}
             >
               <Bell size={20} />
               {unreadCount > 0 && (
@@ -168,11 +170,11 @@ const Header = () => {
             {showNotifications && (
               <div className="notification-dropdown">
                 <div className="notification-header">
-                  <h3>Notifications</h3>
+                  <h3>{t('components:header.notifications')}</h3>
                   {unreadCount > 0 && (
                     <button onClick={markAllAsRead} className="mark-all-read">
                       <Check size={16} />
-                      Mark all as read
+                      {t('components:header.markAllAsRead')}
                     </button>
                   )}
                 </div>
@@ -201,7 +203,7 @@ const Header = () => {
                             e.stopPropagation()
                             deleteNotification(notif.id)
                           }}
-                          title="Delete"
+                          title={t('components:header.delete')}
                         >
                           <X size={16} />
                         </button>
@@ -209,7 +211,7 @@ const Header = () => {
                     ))
                   ) : (
                     <div className="notification-empty">
-                      <p>No notifications</p>
+                      <p>{t('components:header.noNotifications')}</p>
                     </div>
                   )}
                 </div>
@@ -217,10 +219,10 @@ const Header = () => {
             )}
           </div>
 
-          <button className="icon-button" title="Profile">
+          <button className="icon-button" title={t('components:header.profile')}>
             <User size={20} />
           </button>
-          <button className="icon-button logout-button" onClick={handleLogout} title="Logout">
+          <button className="icon-button logout-button" onClick={handleLogout} title={t('components:header.logout')}>
             <LogOut size={20} />
           </button>
         </div>
